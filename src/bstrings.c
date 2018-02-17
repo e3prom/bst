@@ -130,16 +130,13 @@ int main(int argc, char *argv[]) {
         {"verbose",     no_argument,    &verbose_flag, 1},
         {"quiet",       no_argument,    &verbose_flag, 0},
         /* program options */
-        {"hex-escaped", no_argument,    0, 'x'},
-        {"help",        no_argument,    0, 'h'},
+        {"hex-escaped", no_argument,    NULL, 'x'},
+        {"help",        no_argument,    NULL, 'h'},
         {0, 0, 0, 0}
     };
 
-    /* getopt_long()'s option index */
-    // int option_index = 0;
-
     /* using getopt_long() from GNU C library to parse command-line options. */
-    while ((opt = getopt_long(argc, argv, "xh",
+    while ((opt = getopt_long(argc, argv, ":xh",
                               long_options, NULL)) != -1) {
         switch (opt) {
             /* handle getopt_long() return values */
