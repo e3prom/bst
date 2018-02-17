@@ -24,8 +24,7 @@ static void print_usage(FILE *stream, char *program_name) {
     fprintf(stream, " Convert input to specified binary string format.\n");
     fprintf(stream, "\
      -x, --hex-escape       Convert input to an hexadecimal escaped binary string\n\
-     -h, --help             Display this options help.\n\
-    ");
+     -h, --help             Display this options help.\n");
 }
 
 void output_hex_escaped_string(int *ptr_char_array, int *array_size) {
@@ -151,12 +150,20 @@ int main(int argc, char *argv[]) {
             case '?':   /* invalid option given */
             case 'h':   /* user ask for help */
             default:
-                print_usage(stdout, argv[0]);
+                print_usage(stderr, argv[0]);
                 exit(EXIT_FAILURE);
             /* set flag(s) for every program's options */
             case 'v': verbose_flag = 1; break;
             case 'x': doOutputHexEscapedString = true; break;
         }
+    }
+
+    /* simple conditional check to ensure at least a valid option is given at
+     * the command-line, otherwise call print_usage() function.
+     */
+    if ((optind < argc) || argc == 1) {
+        print_usage(stdout, argv[0]);
+        exit(EXIT_SUCCESS);
     }
 
     if (doOutputHexEscapedString == true) {
