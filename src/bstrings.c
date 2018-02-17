@@ -24,34 +24,37 @@ static void print_usage(FILE *stream, char *program_name) {
     fprintf(stream, " Convert input to specified binary string format.\n");
     fprintf(stream, "\
      -x, --hex-escape       Convert input to an hexadecimal escaped binary string\n\
-     -h, --help             Display this options help.\n");
+     -h, --help             Display this options help.\n\
+         --verbose          Activate verbose output.\n");
 }
 
 void output_hex_escaped_string(int *ptr_char_array, int *array_size) {
-   int i, c;
+    int i, c;
 
-   /* initialize the hex escaped character array index to zero */
-   int ai = 0;
+    /* initialize the hex escaped character array index to zero. */
+    int ai = 0;
 
-   /* for every character of the character array 'char_array'
+    /* initialite integer 'invalidhexchar' to be used as a counter. */
+    int invalidhexchar = 0;
+
+    /* for every character of the character array 'char_array'
     * loop through the body until we reach the end of the array.
     */
-   for (i = 0; i < *array_size; i++) {
+    for (i = 0; i < *array_size; i++) {
         c = ptr_char_array[i];
 
         /* filter out any characters outside of the hexadecimal ASCII character
          * range. The below conditional statement may need some improvement.
          */
         if ((c >= 48 && c <= 57) || (c >= 65 && c <= 70) || (c >= 97 && c <= 102)) {
-
             /* if the hex escaped char array index is divible by two, we've a
              * pair of hexadecimal characters (or byte), we need to escape
              * using the binary string escape characters '\' and 'x'.
              */
             if (ai % 2 == 0) {
-               putchar('\\');
-               putchar('x');
-               putchar(c);
+                putchar('\\');
+                putchar('x');
+                putchar(c);
             } else {
                 putchar(c);
             }
@@ -60,6 +63,22 @@ void output_hex_escaped_string(int *ptr_char_array, int *array_size) {
              * of the pair of hexadecimal byte inside the binary string.
              */
             ai++;
+
+        /* catches all non-hexadcimal characters, excepted the end-of-file,
+         * the new line and the null characters respectively.
+         */
+        } else if ((c != EOF) && (c != 10) && (c != 0)) {
+            invalidhexchar++;
+        }
+    }
+
+    /* put newline after binary string */
+    putchar('\n');
+
+    if (verbose_flag == true) {
+        if (invalidhexchar > 0) {
+            fprintf(stdout, "warning: %d non-hexadecimal character(s) "
+                            "detected in input.\n", invalidhexchar);
         }
     }
 }
