@@ -13,8 +13,20 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include <getopt.h>
 #include "include/bool.h"
+
+/* declare the 'verbose_flag' global integer */
+static int verbose_flag;
+
+static void print_usage(FILE *stream, char *program_name) {
+    fprintf(stream, "Usage: %s [-x]\n", program_name);
+    fprintf(stream, " Convert input to specified binary string format.\n");
+    fprintf(stream, "\
+     -x, --hex-escape       Convert input to an hexadecimal escaped binary string\n\
+     -h, --help             Display this options help.\n\
+    ");
+}
 
 void output_hex_escaped_string(int *ptr_char_array, int *array_size) {
    int i, c;
@@ -106,24 +118,53 @@ int * read_and_store_char_input(int *array_size) {
 }
 
 int main(int argc, char *argv[]) {
-    /* initialize all variables needed for command-line options handling. */
+    /* initialize all variables needed for command-line options handling using
+     * the GNU C Library's getopt_long() function.
+     */
     int opt;
     bool doOutputHexEscapedString = false;
 
-    /* initialize integer 'array_size' */
-    int array_size = 1;
+    /* getopt_long()'s long_options struct */
+    static struct option long_options[] = {
+        /* verbosity flags */
+        {"verbose",     no_argument,    &verbose_flag, 1},
+        {"quiet",       no_argument,    &verbose_flag, 0},
+        /* program options */
+        {"hex-escaped", no_argument,    0, 'x'},
+        {"help",        no_argument,    0, 'h'},
+        {0, 0, 0, 0}
+    };
 
-    /* using getopt() from POSIX C library to parse command-line options. */
-    while ((opt = getopt(argc, argv, "x")) != -1) {
+    /* getopt_long()'s option index */
+    // int option_index = 0;
+
+    /* using getopt_long() from GNU C library to parse command-line options. */
+    while ((opt = getopt_long(argc, argv, "xh",
+                              long_options, NULL)) != -1) {
         switch (opt) {
-            case 'x': doOutputHexEscapedString = true; break;
-            default:
-                fprintf(stderr, "Usage: %s [-x]\n", argv[0]);
+            /* handle getopt_long() return values */
+            case 0:     /* getopt_long() set a flag, keep going */
+                break;
+            case 1:     /* getopt_long() points at a command-line argument */
+                break;
+            case ':':   /* an argument option is missing */
+                fprintf(stderr, "%s: option `-%c' require an argument.\n",
+                        argv[0], optopt);
                 exit(EXIT_FAILURE);
+            case '?':   /* invalid option given */
+            case 'h':   /* user ask for help */
+            default:
+                print_usage(stdout, argv[0]);
+                exit(EXIT_FAILURE);
+            /* set flag(s) for every program's options */
+            case 'v': verbose_flag = 1; break;
+            case 'x': doOutputHexEscapedString = true; break;
         }
     }
 
     if (doOutputHexEscapedString == true) {
+        /* initialize integer 'array_size' */
+        int array_size = 1;
         /* call to read_and_store_char_input() */
         int *ptr_char_array = read_and_store_char_input(&array_size);
         /* call to output_hex_escaped_string() */
