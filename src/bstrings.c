@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void output_hex_escaped_string(int *ptr_char_array, int array_size) {
+void output_hex_escaped_string(int *ptr_char_array, int *array_size) {
    int i, c;
 
    /* initialize the hex escaped character array index to zero */
@@ -17,7 +17,7 @@ void output_hex_escaped_string(int *ptr_char_array, int array_size) {
    /* for every character of the character array 'char_array'
     * loop through the body until we reach the end of the array.
     */
-   for (i = 0; i < array_size; i++) {
+   for (i = 0; i < *array_size; i++) {
         c = ptr_char_array[i];
 
         /* filter out any characters outside of the hexadecimal ASCII character
@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
     /* call to read_and_store_char_input() */
     int *ptr_char_array = read_and_store_char_input(&array_size);
     /* call to output_hex_escaped_string() */
-    output_hex_escaped_string(ptr_char_array, array_size);
+    output_hex_escaped_string(ptr_char_array, &array_size);
 
     return 0;
 }
