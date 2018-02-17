@@ -1,12 +1,20 @@
-/* bstrings.c
+/* vi:set tw=78 ts=8 sw=4 sts=4 et:
+ *
+ * Binary String Toolkit
  * This program allow to perform conversion operations on binary strings while
  * supporting various input and output formats such as:
  *     - hexadecimal escaped string (\x).
  *
- * vim: set tw=78
  */
+
+/*
+ * bstrings.c: main program source file
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include "include/bool.h"
 
 void output_hex_escaped_string(int *ptr_char_array, int *array_size) {
    int i, c;
@@ -96,15 +104,31 @@ int * read_and_store_char_input(int *array_size) {
 
    return ptr_char_array;
 }
- 
+
 int main(int argc, char *argv[]) {
+    /* initialize all variables needed for command-line options handling. */
+    int opt;
+    bool doOutputHexEscapedString = false;
+
     /* initialize integer 'array_size' */
     int array_size = 1;
 
-    /* call to read_and_store_char_input() */
-    int *ptr_char_array = read_and_store_char_input(&array_size);
-    /* call to output_hex_escaped_string() */
-    output_hex_escaped_string(ptr_char_array, &array_size);
+    /* using getopt() from POSIX C library to parse command-line options. */
+    while ((opt = getopt(argc, argv, "x")) != -1) {
+        switch (opt) {
+            case 'x': doOutputHexEscapedString = true; break;
+            default:
+                fprintf(stderr, "Usage: %s [-x]\n", argv[0]);
+                exit(EXIT_FAILURE);
+        }
+    }
+
+    if (doOutputHexEscapedString == true) {
+        /* call to read_and_store_char_input() */
+        int *ptr_char_array = read_and_store_char_input(&array_size);
+        /* call to output_hex_escaped_string() */
+        output_hex_escaped_string(ptr_char_array, &array_size);
+    }
 
     return 0;
 }
