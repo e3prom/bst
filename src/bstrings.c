@@ -1,13 +1,16 @@
 /* vi:set tw=78 ts=8 sw=4 sts=4 et:
  *
  * Binary String Toolkit
+ *
+ * Written by Nicolas Chabbey <eprom@toor.si>
+ *
  * This program allow to perform several operations on binary strings while
  * supporting various input and output formats.
  *
  */
 
 /*
- * bstrings.c: main program source file
+ * bstrings.c - main program source file
  */
 
 #include <stdio.h>
@@ -27,15 +30,23 @@ static void print_usage(FILE *stream, char *program_name)
     fprintf(stream, "Usage: %s [OPTION]...\n", program_name);
     fprintf(stream, " Convert input to specified binary string format.\n\n");
     fprintf(stream, " At least one of the below switches must be given:\n\
-   -x, --hex-escape         Convert input to an hexadecimal escaped binary string\n\
-   -b, --gen-badchar        Generate a bad character binary string\n\
+    -x, --hex-escape    Convert hexadecimal input to escaped binary string\n\
+    -b, --gen-badchar   Generate a bad character sequence string\n\
     \n");
     fprintf(stream, " The below switches are optional:\n\
-   -w, --width=bytes        Break binary strings to specified length in bytes\n\
-   -h, --help               Display this help\n\
-       --interactive        Enter interactive mode\n\
-       --verbose            Enable verbose output\n\
+    -w, --width=bytes   Break binary strings to specified length in bytes\n\
+    -h, --help          Display this help\n\
+       --interactive    Enter interactive mode\n\
+       --verbose        Enable verbose output\n\
+       --version        Print version information\n\
     \n");
+}
+
+static void print_version(FILE *stream, char *program_name)
+{
+    fprintf(stream, "Binary String Toolkit 18.2.1\n");
+    fprintf(stream, "Copyright (C) 2018, Nicolas Chabbey\n\n");
+    fprintf(stream, "For help enter \"%s --help\"\n", program_name);
 }
 
 void output_hex_escaped_string(char *ptr_char_array, int *array_size,
@@ -71,8 +82,15 @@ void output_hex_escaped_string(char *ptr_char_array, int *array_size,
              * using the binary string escape characters '\' and 'x'.
              */
             if (ai % 2 == 0) {
-                if ((string_width != 0) && (ai % (string_width*2) == 0)) {
-                    putchar('\n');
+                /* if string_width is non-default */
+                if (string_width != 0) {
+                    /* ensure integer 'ai' is non-zero so we don't insert a
+                     * new line character in the first row of output. put a
+                     * new line character every string_width's byte value.
+                     */
+                    if ((ai != 0) && (ai % (string_width*2) == 0)) {
+                        putchar('\n');
+                    }
                 }
                 putchar('\\');
                 putchar('x');
@@ -97,11 +115,9 @@ void output_hex_escaped_string(char *ptr_char_array, int *array_size,
     /* put newline character after the binary string */
     putchar('\n');
 
-    if (verbose_flag == true) {
-        if (invalidhexchar > 0) {
-            fprintf(stdout, "[-] Warning: %d non-hexadecimal character(s) "
-                            "detected in input.\n", invalidhexchar);
-        }
+    if ((verbose_flag == true) && (invalidhexchar > 0)) {
+        fprintf(stdout, "[-] Warning: %d non-hexadecimal character(s) "
+                        "detected in input.\n", invalidhexchar);
     }
 }
 
@@ -184,7 +200,7 @@ char * read_and_store_char_input(int *array_size)
      */
     while ((c = getchar()) != EOF) {
         ptr_char_array[i] = (char)c;
-        ptr_char_array = change_dynamic_memory(ptr_char_array, sizeof(char) * \
+        ptr_char_array = change_dynamic_memory(ptr_char_array, sizeof(char) *
                                               (*array_size+=1));
         i++;
     }
@@ -218,13 +234,15 @@ int main(int argc, char *argv[])
         {"gen-badchar", no_argument,    NULL, 'b'},
         /* program options */
         {"width",       required_argument,  NULL, 'w'},
+        /* version option */
+        {"version",     no_argument,    NULL, '@'},
         /* help option */
         {"help",        no_argument,    NULL, 'h'},
         {0, 0, 0, 0}
     };
 
     /* using getopt_long() from GNU C library to parse command-line options. */
-    while ((opt = getopt_long(argc, argv, ":hxbw::",
+    while ((opt = getopt_long(argc, argv, ":hvxbw::",
                               long_options, NULL)) != -1) {
         switch (opt) {
             /* handle getopt_long() return values */
@@ -241,6 +259,9 @@ int main(int argc, char *argv[])
             default:
                 print_usage(stderr, argv[0]);
                 exit(EXIT_FAILURE);
+            case '@':
+                print_version(stderr, argv[0]);
+                exit(EXIT_SUCCESS);
             /* program's options */
             case 'v': verbose_flag = 1; break;
             case 'x': doOutputHexEscapedString = true; break;
