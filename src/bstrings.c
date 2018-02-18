@@ -24,15 +24,19 @@ static void print_usage(FILE *stream, char *program_name) {
     fprintf(stream, " Convert input to specified binary string format.\n");
     fprintf(stream, "\
      -x, --hex-escape       Convert input to an hexadecimal escaped binary string\n\
-     -b, --gen-badchar      Generate bad characters sequence\n\
-     -h, --help             Display this options help\n\
-         --verbose          Activate verbose output\n");
+     -b, --gen-badchar      Generate a bad character hexadecimal escaped sequence\n\
+     -w, --width=bytes      Line break binary string output to specified width\n\
+     -h, --help             Display this help\n\
+         --verbose          Enable verbose output\n");
 }
 
-void output_hex_escaped_string(char *ptr_char_array, int *array_size) {
+void output_hex_escaped_string(char *ptr_char_array, int *array_size,
+                               int string_width) {
     int i, c;
 
-    /* initialize the hex escaped character array index to zero. */
+    /* initialize the hex escaped character array index to zero.
+     * it keep track of the number of hex digits present in the binary string.
+     */
     int ai = 0;
 
     /* initialize integer 'invalidhexchar' to be used as a counter. */
@@ -56,6 +60,9 @@ void output_hex_escaped_string(char *ptr_char_array, int *array_size) {
              * using the binary string escape characters '\' and 'x'.
              */
             if (ai % 2 == 0) {
+                if ((string_width != 0) && (ai % (string_width*2) == 0)) {
+                    putchar('\n');
+                }
                 putchar('\\');
                 putchar('x');
                 putchar(c);
@@ -123,7 +130,7 @@ char * generate_badchar_sequence() {
 
     /* initialize bad char. character array pointer by calling
      * allocate_dynamic_memory() function with a fixed allocation size of 510
-     * bytes, the latter being the length we need to hold 255 hex digits.
+     * bytes, the latter being the length we need to hold all hex digits.
     */
     char *ptr_badchar_array = allocate_dynamic_memory(sizeof(char) * 510);
 
@@ -172,22 +179,31 @@ int main(int argc, char *argv[]) {
      * the GNU C Library's getopt_long() function.
      */
     int opt;
-    bool doOutputHexEscapedString, doOutputBadCharString = false;
+
+    /* initialize program's options flags */
+    bool doOutputHexEscapedString, doOutputBadCharString,
+         doLimitBinaryStringWidth = false;
+
+    /* initialite output_width to the default */
+    int string_width = 0;
 
     /* getopt_long()'s long_options struct */
     static struct option long_options[] = {
         /* verbosity flags */
         {"verbose",     no_argument,    &verbose_flag, 1},
         {"quiet",       no_argument,    &verbose_flag, 0},
-        /* program options */
+        /* program actions */
         {"hex-escaped", no_argument,    NULL, 'x'},
         {"gen-badchar", no_argument,    NULL, 'b'},
+        /* program options */
+        {"width",       required_argument,  0, 'w'},
+        /* help option */
         {"help",        no_argument,    NULL, 'h'},
         {0, 0, 0, 0}
     };
 
     /* using getopt_long() from GNU C library to parse command-line options. */
-    while ((opt = getopt_long(argc, argv, ":xh",
+    while ((opt = getopt_long(argc, argv, ":hxbw",
                               long_options, NULL)) != -1) {
         switch (opt) {
             /* handle getopt_long() return values */
@@ -204,10 +220,17 @@ int main(int argc, char *argv[]) {
             default:
                 print_usage(stderr, argv[0]);
                 exit(EXIT_FAILURE);
-            /* set flag(s) for every program's options */
+            /* program's options */
             case 'v': verbose_flag = 1; break;
             case 'x': doOutputHexEscapedString = true; break;
             case 'b': doOutputBadCharString = true; break;
+            case 'w':   /* binary string width option */
+                doLimitBinaryStringWidth = true;
+                /* using atoi() from GNU C library to read the string width
+                 * from the command-line -w|--width option argument.
+                 */
+                string_width = atoi(optarg);
+                break;
         }
     }
 
@@ -225,16 +248,23 @@ int main(int argc, char *argv[]) {
         /* call to read_and_store_char_input() */
         char *ptr_char_array = read_and_store_char_input(&array_size);
         /* call to output_hex_escaped_string() */
-        output_hex_escaped_string(ptr_char_array, &array_size);
+        output_hex_escaped_string(ptr_char_array, &array_size, string_width);
     }
 
     if (doOutputBadCharString == true) {
         /* initialize integer 'array_size' to 510 bytes */
         int array_size = 510;
+        /* toggle verbosity is flag set */
+        if (verbose_flag == true) {
+            printf("[*] Generating bad character binary string:\n");
+            if (doLimitBinaryStringWidth == true) {
+                printf("[+] Binary string width limit to %d bytes.\n", string_width);
+            }
+        }
         /* call to generate_badchar_sequence() */
         char *ptr_char_array = generate_badchar_sequence();
         /* call to output_hex_escaped_string() */
-        output_hex_escaped_string(ptr_char_array, &array_size);
+        output_hex_escaped_string(ptr_char_array, &array_size, string_width);
     }
 
     return 0;
