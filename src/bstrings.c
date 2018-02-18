@@ -24,18 +24,22 @@ static void print_usage(FILE *stream, char *program_name) {
     fprintf(stream, " Convert input to specified binary string format.\n");
     fprintf(stream, "\
      -x, --hex-escape       Convert input to an hexadecimal escaped binary string\n\
-     -h, --help             Display this options help.\n\
-         --verbose          Activate verbose output.\n");
+     -b, --gen-badchar      Generate bad characters sequence\n\
+     -h, --help             Display this options help\n\
+         --verbose          Activate verbose output\n");
 }
 
-void output_hex_escaped_string(int *ptr_char_array, int *array_size) {
+void output_hex_escaped_string(char *ptr_char_array, int *array_size) {
     int i, c;
 
     /* initialize the hex escaped character array index to zero. */
     int ai = 0;
 
-    /* initialite integer 'invalidhexchar' to be used as a counter. */
+    /* initialize integer 'invalidhexchar' to be used as a counter. */
     int invalidhexchar = 0;
+
+    /* if interactive: start binary string on a new line */
+    // putchar('\n');
 
     /* for every character of the character array 'char_array'
     * loop through the body until we reach the end of the array.
@@ -72,7 +76,7 @@ void output_hex_escaped_string(int *ptr_char_array, int *array_size) {
         }
     }
 
-    /* put newline after binary string */
+    /* put newline character after the binary string */
     putchar('\n');
 
     if (verbose_flag == true) {
@@ -83,35 +87,62 @@ void output_hex_escaped_string(int *ptr_char_array, int *array_size) {
     }
 }
 
-int * allocate_dynamic_memory(int alloc_size) {
+char * allocate_dynamic_memory(int alloc_size) {
     /* use malloc() to allocate dynamic memory and then return to the caller
      * function the memory location allocated on the heap.
      */
-    int *ptr = malloc(alloc_size);
-    return ptr;
+    char *ptr = malloc(alloc_size);
 
     /* error handling: on errors malloc() returns NULL. */
     if (ptr == NULL) {
         printf("%d byte(s) memory allocation error.", alloc_size);
         exit(EXIT_FAILURE);
     }
+
+    return ptr;
 }
 
-int * change_dynamic_memory(int *ptr, int new_size) {
+char * change_dynamic_memory(char *ptr, int new_size) {
     /* call to realloc() to change the size of the memory block pointed to by
      * the pointer 'ptr' with the new size value in 'new_size'.
      */
-    int *new_ptr = realloc(ptr, new_size);
-    return new_ptr;
+    char *new_ptr = realloc(ptr, new_size);
 
     /* error handling: on errors realloc() returns NULL. */
     if (new_ptr == NULL) {
         printf("%d byte(s) memory re-allocation error.", new_size);
         exit(EXIT_FAILURE);
     }
+
+    return new_ptr;
 }
 
-int * read_and_store_char_input(int *array_size) {
+char * generate_badchar_sequence() {
+    /* declare integer i */
+    int i;
+
+    /* initialize bad char. character array pointer by calling
+     * allocate_dynamic_memory() function with a fixed allocation size of 510
+     * bytes, the latter being the length we need to hold 255 hex digits.
+    */
+    char *ptr_badchar_array = allocate_dynamic_memory(sizeof(char) * 510);
+
+    /* initialize length integer */
+    int length = 0;
+
+    /* simple linear hex digits generator */
+    for (i = 1; i < 256; i++) {
+        /* leveraging sprintf() to store hexadecimal digits to the character
+         * array. -- To check for buffer overflow condition.
+         */
+        length += sprintf(ptr_badchar_array+length, "%02x", i);
+    }
+
+    /* return the character array pointer to the caller function */
+    return ptr_badchar_array;
+}
+
+char * read_and_store_char_input(int *array_size) {
     /* declare integer 'c' which will hold input character. */
     int c;
     /* initialize integer 'i' which will be used as an array index. */
@@ -120,19 +151,20 @@ int * read_and_store_char_input(int *array_size) {
     /* initialize character array pointer 'ptr_char_array' by calling
      * allocate_dynamic_memory() function.
      */
-    int *ptr_char_array = allocate_dynamic_memory(sizeof(int));
+    char *ptr_char_array = allocate_dynamic_memory(sizeof(char));
 
     /* store each input character into the character array 'ptr_char_array'
      * until we reach EOF.
      */
     while ((c = getchar()) != EOF) {
         ptr_char_array[i] = (char)c;
-        ptr_char_array = change_dynamic_memory(ptr_char_array, sizeof(int) * \
-                         (*array_size+=1));
+        ptr_char_array = change_dynamic_memory(ptr_char_array, sizeof(char) * \
+                                              (*array_size+=1));
         i++;
     }
 
-   return ptr_char_array;
+    /* return a pointer to caller function */
+    return ptr_char_array;
 }
 
 int main(int argc, char *argv[]) {
@@ -140,7 +172,7 @@ int main(int argc, char *argv[]) {
      * the GNU C Library's getopt_long() function.
      */
     int opt;
-    bool doOutputHexEscapedString = false;
+    bool doOutputHexEscapedString, doOutputBadCharString = false;
 
     /* getopt_long()'s long_options struct */
     static struct option long_options[] = {
@@ -149,6 +181,7 @@ int main(int argc, char *argv[]) {
         {"quiet",       no_argument,    &verbose_flag, 0},
         /* program options */
         {"hex-escaped", no_argument,    NULL, 'x'},
+        {"gen-badchar", no_argument,    NULL, 'b'},
         {"help",        no_argument,    NULL, 'h'},
         {0, 0, 0, 0}
     };
@@ -174,6 +207,7 @@ int main(int argc, char *argv[]) {
             /* set flag(s) for every program's options */
             case 'v': verbose_flag = 1; break;
             case 'x': doOutputHexEscapedString = true; break;
+            case 'b': doOutputBadCharString = true; break;
         }
     }
 
@@ -189,7 +223,16 @@ int main(int argc, char *argv[]) {
         /* initialize integer 'array_size' */
         int array_size = 1;
         /* call to read_and_store_char_input() */
-        int *ptr_char_array = read_and_store_char_input(&array_size);
+        char *ptr_char_array = read_and_store_char_input(&array_size);
+        /* call to output_hex_escaped_string() */
+        output_hex_escaped_string(ptr_char_array, &array_size);
+    }
+
+    if (doOutputBadCharString == true) {
+        /* initialize integer 'array_size' to 510 bytes */
+        int array_size = 510;
+        /* call to generate_badchar_sequence() */
+        char *ptr_char_array = generate_badchar_sequence();
         /* call to output_hex_escaped_string() */
         output_hex_escaped_string(ptr_char_array, &array_size);
     }
