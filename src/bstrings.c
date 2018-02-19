@@ -52,18 +52,25 @@ static void print_usage(FILE *stream, char *program_name)
 
 static void print_version(FILE *stream, char *program_name)
 {
+    /* version & copyright */
     fprintf(stream, "Binary String Toolkit %s\n", program_version);
-    if(program_build != NULL) {
-    fprintf(stream, "Build version %s, compiled the %s\n", program_build,
-            program_build_time);
-    }
     fprintf(stream, "Copyright (C) 2018 Nicolas Chabbey\n");
+    /* license statement */
     fprintf(stream, "This program is free software: you can redistribute it "
                     "and/or modify it\nunder the terms of the GNU General "
                     "Public License as published by the\nFree Software "
                     "Foundation, either version 2 of the License, or \n"
                     "(at your option) any later version.\n"
                     "This program has absolutely no warranty.\n");
+    /* source code, bug reporting & documentation */
+    fprintf(stream, "Source code, bug reporting and documentation available "
+                    "at:\n<https://github.com/e3prom/bst>\n");
+    /* build & build time */
+    if(program_build != NULL) {
+    fprintf(stream, "Git Build %s\nCompiled the %s\n", program_build,
+            program_build_time);
+    }
+    /* help */
     fprintf(stream, "For help enter \"%s --help\"\n", program_name);
 }
 

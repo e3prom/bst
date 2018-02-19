@@ -21,6 +21,6 @@
  */
 
 #include "include/version.h"
-const char * program_version = "v1.8.0";
-const char * program_build = "";
-const char * program_build_time = "Mon 19 Feb 16:10:28 CET 2018";
+const char * program_version = "v1.8.0-1-gc755";
+const char * program_build = "c7558b10aff69155de2a9e67c78b0f1f4e87c86b";
+const char * program_build_time = "Mon 19 Feb 15:48:04 UTC 2018";
