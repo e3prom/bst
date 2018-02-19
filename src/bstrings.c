@@ -101,7 +101,8 @@ void output_hex_escaped_string(char *ptr_char_array, int *array_size,
         /* filter out any characters outside of the hexadecimal ASCII character
          * range. The below conditional statement may need some improvement.
          */
-        if ((c >= 48 && c <= 57) || (c >= 65 && c <= 70) || (c >= 97 && c <= 102)) {
+        if ((c >= 48 && c <= 57) || (c >= 65 && c <= 70) ||
+            (c >= 97 && c <= 102)) {
             /* if the hex escaped char array index is divible by two, we've a
              * pair of hexadecimal characters (or byte), we need to escape
              * using the binary string escape characters '\' and 'x'.
@@ -266,7 +267,7 @@ int main(int argc, char *argv[])
         {0, 0, 0, 0}
     };
 
-    /* using getopt_long() from GNU C library to parse command-line options. */
+    /* using getopt_long() from GNU C library to parse command-line options */
     while ((opt = getopt_long(argc, argv, ":hvxbw::",
                               long_options, NULL)) != -1) {
         switch (opt) {
@@ -319,7 +320,8 @@ int main(int argc, char *argv[])
         int array_size = 1;
         /* toggle verbosity if flag set */
         if (verbose_flag == true) {
-            printf("[*] Convert hexadecimal input to a hex escaped binary string.\n");
+            printf("[*] Convert hexadecimal input to an escaped binary string"
+                   ".\n")
             if (doLimitBinaryStringWidth == true) {
                 printf("[+] Binary string width is limited to %d bytes.\n",
                        string_width);

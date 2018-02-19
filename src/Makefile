@@ -18,7 +18,8 @@ $(TARGET): $(OBJECTS)
 version.c: check
 	cat version.in > version.c
 	awk 'BEGIN {print "#include \"include/version.h\""}' >> version.c
-	$(GIT) describe --abbrev=4 --always --tags | awk '{print "const char * program_version = \""$$0"\";"} END {}' >> version.c
+	$(GIT) describe --abbrev=4 --always --tags | \
+        awk '{print "const char * program_version = \""$$0"\";"} END {}' >> version.c
 	$(GIT) rev-parse HEAD | awk '{print "const char * program_build = \""$$0"\";"} END {}' >> version.c
 	date --utc | awk 'BEGIN {} {print "const char * program_build_time = \""$$0"\";"} END {}' >> version.c
 
