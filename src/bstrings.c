@@ -2,10 +2,17 @@
  *
  * Binary String Toolkit
  *
- * Written by Nicolas Chabbey <eprom@toor.si>
+ * Copyright (C) 2018 Nicolas Chabbey
  *
- * This program allow to perform several operations on binary strings while
- * supporting various input and output formats.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
  */
 
@@ -44,8 +51,14 @@ static void print_usage(FILE *stream, char *program_name)
 
 static void print_version(FILE *stream, char *program_name)
 {
-    fprintf(stream, "Binary String Toolkit 18.2.1\n");
-    fprintf(stream, "Copyright (C) 2018, Nicolas Chabbey\n\n");
+    fprintf(stream, "Binary String Toolkit 1.8.0\n");
+    fprintf(stream, "Copyright (C) 2018 Nicolas Chabbey\n");
+    fprintf(stream, "This program is free software: you can redistribute it "
+                    "and/or modify it\nunder the terms of the GNU General "
+                    "Public License as published by the\nFree Software "
+                    "Foundation, either version 2 of the License, or \n"
+                    "(at your option) any later version.\n"
+                    "This program has absolutely no warranty.\n");
     fprintf(stream, "For help enter \"%s --help\"\n", program_name);
 }
 
