@@ -5,7 +5,7 @@
  */
 
 /*
- * bool.h - add boolean type support.
+ * bool.h - add boolean type support
  */
 
 typedef enum { false, true } bool;

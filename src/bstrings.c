@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include "include/bool.h"
+#include "include/version.h"
 
 #define BADCHAR_HEX_SEQLEN  510     /* badchar hex digits sequence length */
 
@@ -51,7 +52,11 @@ static void print_usage(FILE *stream, char *program_name)
 
 static void print_version(FILE *stream, char *program_name)
 {
-    fprintf(stream, "Binary String Toolkit 1.8.0\n");
+    fprintf(stream, "Binary String Toolkit %s\n", program_version);
+    if(program_build != NULL) {
+    fprintf(stream, "Build version %s, compiled the %s\n", program_build,
+            program_build_time);
+    }
     fprintf(stream, "Copyright (C) 2018 Nicolas Chabbey\n");
     fprintf(stream, "This program is free software: you can redistribute it "
                     "and/or modify it\nunder the terms of the GNU General "
