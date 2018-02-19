@@ -27,3 +27,4 @@ check-if-git-exists:	; @which git >/dev/null
 
 clean: 
 	rm $(TARGET) $(OBJECTS)
+	rm version.c
