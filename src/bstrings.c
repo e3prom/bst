@@ -321,7 +321,7 @@ int main(int argc, char *argv[])
         /* toggle verbosity if flag set */
         if (verbose_flag == true) {
             printf("[*] Convert hexadecimal input to an escaped binary string"
-                   ".\n")
+                   ".\n");
             if (doLimitBinaryStringWidth == true) {
                 printf("[+] Binary string width is limited to %d bytes.\n",
                        string_width);
