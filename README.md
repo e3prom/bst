@@ -1,13 +1,13 @@
 # Binary String Toolkit
-## Introduction
+## Summary
 The Binary String Toolkit or BST for short is a rather simple utility to
-convert binary strings into various formats suitable for later inclusions in
+convert binary strings to various formats suitable for later inclusions in
 source codes such as those used to develop exploits in the security field.
 
 ## Features
- * Convert an hexadecimal input to an escaped binary string.
+ * Convert a plain hexadecimal input to an escaped binary string.
  * Output a "bad characters" sequence in a hexadecimal escaped binary string.
- * Limit binary strings width for better readability in source codes.
+ * Limit binary strings to specified width for better readability in source codes.
 
 ## Dependencies
  * POSIX C Library
@@ -15,14 +15,17 @@ source codes such as those used to develop exploits in the security field.
  * Git
 
 ## Building
-To build the main 'bstrings' binary, simply invoke make:
+To build the 'bstrings' binary, simply invoke make:
 ```
 $ make
+# install bstrings to /usr/local/bin
+$ make install
 ```
 
 ## Running
-The below example simply shows how an assembled shellcode can be easily send to
-'bstrings' to generate an escaped string of 8 hexadecimal digits width:
+The below example simply shows how an assembled shellcode can be easily sent to
+bstrings to generate an escaped string of 8 hexadecimal digits (or 4 bytes)
+width:
 ```
 $ xxd -ps lnx-execve-setreuid-x86_64 | bstrings -x -w4
 \x31\xc0\x48\x89
@@ -38,11 +41,12 @@ $ xxd -ps lnx-execve-setreuid-x86_64 | bstrings -x -w4
 \xb0\x3b\x0f\x05
 ```
 
-For more commands and a description of all available command-line switches,
-simply consult the command's help:
+For a list of supported commands and the description of all available
+command-line switches, simply consult the command's help:
 ```
 $ bstrings --help
+[...]
 ```
 
 ## Software License
-This project is licensed under the terms of GNU General Public License.
+This software is licensed under the terms of GNU General Public License.
