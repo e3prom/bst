@@ -44,6 +44,7 @@ static void print_usage(FILE *stream, char *program_name)
     -b, --gen-badchar       Generate a bad character sequence string\n\
     \n");
     fprintf(stream, " The below switches are optional:\n\
+    -f, --file=FILE         Read input from file FILE instead of stdin\n\
     -w, --width=bytes       Break binary strings to specified length in bytes\n\
     -h, --help              Display this help\n\
        --interactive        Enter interactive mode\n\
@@ -252,34 +253,58 @@ char * read_and_store_char_input(int *array_size)
     return ptr_char_array;
 }
 
-int * read_from_file(char *filename)
+char * read_from_file(char *filename, int *array_size, int mode)
 {
     /* declare integer 'c' */
     int c;
     /* declare pointer to FILE 'ptr_file_read' */
     FILE *ptr_file_read;
+    /* declare local pointer to character array 'ptr_char_array' */
+    char *ptr_char_array;
 
     /* initialize pointer 'ptr_file_read' */
     ptr_file_read = fopen(filename, "r");
 
-    /* if ptr_file_read is non-null */
-    if (ptr_file_read != NULL) {
-        /* get next character from file using getc() until we reach EOF */
-        while ((c = getc(ptr_file_read)) != EOF) {
-            printf("%02x", c);
-        }
-        /* close opened file handler */
-        fclose(ptr_file_read);
-    } else {
-        printf("[-] Error: specified filename \"%s\" cannot be read.\n",
-               filename);
+    /* if ptr_file_read is null, return an error and exit */
+    if (ptr_file_read == NULL) {
+        printf("[-] Error: input filename \"%s\" cannot be read.\n",
+                filename);
         exit(EXIT_FAILURE);
     }
 
-    /* put new line character after string output */
-    putchar('\n');
-    /* return 0 if successful */
-    return 0;
+    /* before continuing let see in which mode we're in */
+    /* mode 1: we read file and store content on the heap */
+    if (mode == 1) {
+        /* initialize char array index */
+        int i = 0;
+
+        /* initialize character array pointer 'ptr_char_array' by calling
+         * allocate_dynamic_memory() function.
+         */
+        ptr_char_array = allocate_dynamic_memory(sizeof(char));
+
+        while ((c = getc(ptr_file_read)) != EOF) {
+            ptr_char_array[i] = (char)c;
+            ptr_char_array = change_dynamic_memory(ptr_char_array,
+                                                   sizeof(char) *
+                                                   (*array_size+=1));
+            i++;
+
+        }
+    /* otherwise: we read from file and output to stdout directly */
+    } else {
+        /* get next character from file using getc() until we reach EOF */
+        while ((c = getc(ptr_file_read)) != EOF)
+            printf("%02x", c);
+        /* put new line character after string output */
+        putchar('\n');
+    }
+
+    /* close opened file handler */
+    fclose(ptr_file_read);
+
+    /* return pointer to 'ptr_char_array' */
+    return ptr_char_array;
 }
 
 int main(int argc, char *argv[])
@@ -291,10 +316,13 @@ int main(int argc, char *argv[])
 
     /* initialize program's options flags */
     bool doOutputHexEscapedString, doOutputBadCharString,
-         doHexDumpFile, doLimitBinaryStringWidth = false;
+         doHexDumpFile, doReadFromFile, doLimitBinaryStringWidth = false;
 
     /* declare fread_filename character array */
     char fread_filename[MAX_FILENAME_LENGTH+1];
+
+    /* declare 'ptr_char_array' character array pointer */
+    char *ptr_char_array;
 
     /* initialite string_width to the default value of zero. */
     int string_width = 0;
@@ -310,7 +338,7 @@ int main(int argc, char *argv[])
         {"gen-badchar", no_argument,        NULL, 'b'},
         {"dump-file",   required_argument,  NULL, 'D'},
         /* program options */
-        // {"file",        required_argument,  NULL, 'f'},
+        {"file",        required_argument,  NULL, 'f'},
         {"width",       required_argument,  NULL, 'w'},
         /* version option */
         {"version",     no_argument,    NULL, '@'},
@@ -320,7 +348,7 @@ int main(int argc, char *argv[])
     };
 
     /* using getopt_long() from GNU C library to parse command-line options */
-    while ((opt = getopt_long(argc, argv, ":D:xbw:h",
+    while ((opt = getopt_long(argc, argv, ":D:xbf:w:h",
                               long_options, NULL)) != -1) {
         switch (opt) {
             /* handle getopt_long() return values */
@@ -340,14 +368,21 @@ int main(int argc, char *argv[])
             case '@':
                 print_version(stderr, argv[0]);
                 exit(EXIT_SUCCESS);
-            /* program's options */
+            /* program's commands and options */
             case 'v': verbose_flag = 1; break;
             case 'x': doOutputHexEscapedString = true; break;
             case 'b': doOutputBadCharString = true; break;
-            case 'D':   /* file to read from option */
+            case 'D':   /* dump file content in hex */
                 doHexDumpFile = true;
                 if (optarg != NULL)
-                    snprintf(fread_filename, MAX_FILENAME_LENGTH, "%s", optarg);
+                    snprintf(fread_filename, MAX_FILENAME_LENGTH, "%s",
+                             optarg);
+                break;
+            case 'f':   /* file to read from option */
+                doReadFromFile = true;
+                if (optarg != NULL)
+                    snprintf(fread_filename, MAX_FILENAME_LENGTH, "%s",
+                             optarg);
                 break;
             case 'w':   /* binary string width option */
                 doLimitBinaryStringWidth = true;
@@ -374,7 +409,7 @@ int main(int argc, char *argv[])
     /* if -D|--dump-file option is given */
     if (doHexDumpFile == true) {
         /* call to read_from_file() */
-        read_from_file(fread_filename);
+        read_from_file(fread_filename, NULL, 0);
     }
 
     /* if -x|--hex-escape option is given */
@@ -390,8 +425,15 @@ int main(int argc, char *argv[])
                        string_width);
             }
         }
-        /* call to read_and_store_char_input() */
-        char *ptr_char_array = read_and_store_char_input(&array_size);
+        /* if -f|--file option is given read from file instead of stdin */
+        if (doReadFromFile == true) {
+            /* call to read_from_file() */
+            ptr_char_array = read_from_file(fread_filename, &array_size, 1);
+        }
+        else {
+            /* call to read_and_store_char_input() */
+            ptr_char_array = read_and_store_char_input(&array_size);
+        }
         /* call to output_hex_escaped_string() */
         output_hex_escaped_string(ptr_char_array, &array_size, string_width);
         /* call to free() for 'ptr_char_array' */
@@ -411,7 +453,7 @@ int main(int argc, char *argv[])
             }
         }
         /* call to generate_badchar_sequence() */
-        char *ptr_char_array = generate_badchar_sequence();
+        ptr_char_array = generate_badchar_sequence();
         /* call to output_hex_escaped_string() */
         output_hex_escaped_string(ptr_char_array, &array_size, string_width);
         /* call to free() for 'ptr_char_array' */
