@@ -27,6 +27,7 @@
 #include "include/version.h"
 
 #define BADCHAR_HEX_SEQLEN  510     /* badchar hex digits sequence length */
+#define MAX_FILENAME_LENGTH 512     /* max filename length on filesystems */
 
 /* declare the 'verbose_flag' global integer */
 static int verbose_flag;
@@ -38,22 +39,23 @@ static void print_usage(FILE *stream, char *program_name)
     fprintf(stream, "Usage: %s [OPTION]...\n", program_name);
     fprintf(stream, " Convert input to specified binary string format.\n\n");
     fprintf(stream, " At least one of the below switches must be given:\n\
-    -x, --hex-escape    Convert hexadecimal input to escaped binary string\n\
-    -b, --gen-badchar   Generate a bad character sequence string\n\
+    -D, --dump-file=FILE    Dump content of file FILE in hexadecimal format\n\
+    -x, --hex-escape        Convert hexadecimal input to escaped binary string\n\
+    -b, --gen-badchar       Generate a bad character sequence string\n\
     \n");
     fprintf(stream, " The below switches are optional:\n\
-    -w, --width=bytes   Break binary strings to specified length in bytes\n\
-    -h, --help          Display this help\n\
-       --interactive    Enter interactive mode\n\
-       --verbose        Enable verbose output\n\
-       --version        Print version information\n\
+    -w, --width=bytes       Break binary strings to specified length in bytes\n\
+    -h, --help              Display this help\n\
+       --interactive        Enter interactive mode\n\
+       --verbose            Enable verbose output\n\
+       --version            Print version information\n\
     \n");
 }
 
 static void print_version(FILE *stream, char *program_name)
 {
     /* version & copyright */
-    fprintf(stream, "Binary String Toolkit %s\n", program_version);
+    fprintf(stream, "Binary String Toolkit (%s)\n", program_version);
     fprintf(stream, "Copyright (C) 2018 Nicolas Chabbey\n");
     /* license statement */
     fprintf(stream, "This program is free software: you can redistribute it "
@@ -106,9 +108,9 @@ void output_hex_escaped_string(char *ptr_char_array, int *array_size,
             /* if the character is within the hexadecimal characters range.
              * ranges within switch case's constants are supported by GCC.
              */
-            case 48 ... 57:
-            case 65 ... 70:
-            case 97 ... 102:
+            case 48 ... 57:         // 0-9
+            case 65 ... 70:         // A-F
+            case 97 ... 102:        // a-f
                 /* if the hex escaped char array index is divible by two,
                  * we've pair of hexadecimal characters (or byte), we need to
                  * escape using the binary string escape characters '\' and
@@ -138,15 +140,15 @@ void output_hex_escaped_string(char *ptr_char_array, int *array_size,
                  */
                 ai++;
                 break;
-            default:    /* all non-hexadecimal characters */
+            default:        /* all non-hexadecimal characters */
                 /* catches all non-hexadcimal characters, excepted the
                  * end-of-file, the new-line and the null characters
                  * respectively.
                  */
                 switch (c) {
-                    case EOF: break;
-                    case 10: break;
-                    case 0: break;
+                    case EOF: break;    // End of File
+                    case 10: break;     // New Line
+                    case 0: break;      // Null
                     default: invalidhexchar++;
                 }
         }
@@ -250,6 +252,36 @@ char * read_and_store_char_input(int *array_size)
     return ptr_char_array;
 }
 
+int * read_from_file(char *filename)
+{
+    /* declare integer 'c' */
+    int c;
+    /* declare pointer to FILE 'ptr_file_read' */
+    FILE *ptr_file_read;
+
+    /* initialize pointer 'ptr_file_read' */
+    ptr_file_read = fopen(filename, "r");
+
+    /* if ptr_file_read is non-null */
+    if (ptr_file_read != NULL) {
+        /* get next character from file using getc() until we reach EOF */
+        while ((c = getc(ptr_file_read)) != EOF) {
+            printf("%02x", c);
+        }
+        /* close opened file handler */
+        fclose(ptr_file_read);
+    } else {
+        printf("[-] Error: specified filename \"%s\" cannot be read.\n",
+               filename);
+        exit(EXIT_FAILURE);
+    }
+
+    /* put new line character after string output */
+    putchar('\n');
+    /* return 0 if successful */
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
     /* initialize all variables needed for command-line options handling using
@@ -259,7 +291,10 @@ int main(int argc, char *argv[])
 
     /* initialize program's options flags */
     bool doOutputHexEscapedString, doOutputBadCharString,
-         doLimitBinaryStringWidth = false;
+         doHexDumpFile, doLimitBinaryStringWidth = false;
+
+    /* declare fread_filename character array */
+    char fread_filename[MAX_FILENAME_LENGTH+1];
 
     /* initialite string_width to the default value of zero. */
     int string_width = 0;
@@ -271,9 +306,11 @@ int main(int argc, char *argv[])
         {"quiet",       no_argument,    &verbose_flag, 0},
         {"interactive", no_argument,    &interactive_flag, 1},
         /* program actions */
-        {"hex-escape",  no_argument,    NULL, 'x'},
-        {"gen-badchar", no_argument,    NULL, 'b'},
+        {"hex-escape",  no_argument,        NULL, 'x'},
+        {"gen-badchar", no_argument,        NULL, 'b'},
+        {"dump-file",   required_argument,  NULL, 'D'},
         /* program options */
+        // {"file",        required_argument,  NULL, 'f'},
         {"width",       required_argument,  NULL, 'w'},
         /* version option */
         {"version",     no_argument,    NULL, '@'},
@@ -283,7 +320,7 @@ int main(int argc, char *argv[])
     };
 
     /* using getopt_long() from GNU C library to parse command-line options */
-    while ((opt = getopt_long(argc, argv, ":hvxbw::",
+    while ((opt = getopt_long(argc, argv, ":D:xbw:h",
                               long_options, NULL)) != -1) {
         switch (opt) {
             /* handle getopt_long() return values */
@@ -307,16 +344,21 @@ int main(int argc, char *argv[])
             case 'v': verbose_flag = 1; break;
             case 'x': doOutputHexEscapedString = true; break;
             case 'b': doOutputBadCharString = true; break;
+            case 'D':   /* file to read from option */
+                doHexDumpFile = true;
+                if (optarg != NULL)
+                    snprintf(fread_filename, MAX_FILENAME_LENGTH, "%s", optarg);
+                break;
             case 'w':   /* binary string width option */
                 doLimitBinaryStringWidth = true;
-                /* make sure optarg is non-null before performing operation */
+                /* make sure 'optarg' isn't null before using it */
                 if (optarg != NULL) {
                     /* using atoi() from the GNU C library to read the binary
                      * string width from the command-line -w|--width option
                      * argument.
                      */
                     string_width = atoi(optarg);
-                }
+                    }
                 break;
         }
     }
@@ -327,6 +369,12 @@ int main(int argc, char *argv[])
     if ((optind < argc) || argc == 1) {
         print_usage(stdout, argv[0]);
         exit(EXIT_SUCCESS);
+    }
+
+    /* if -D|--dump-file option is given */
+    if (doHexDumpFile == true) {
+        /* call to read_from_file() */
+        read_from_file(fread_filename);
     }
 
     /* if -x|--hex-escape option is given */
