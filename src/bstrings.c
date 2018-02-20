@@ -163,7 +163,8 @@ char * allocate_dynamic_memory(int alloc_size)
     return ptr;
 }
 
-char * change_dynamic_memory(char *ptr, int new_size) {
+char * change_dynamic_memory(char *ptr, int new_size)
+{
     /* call to realloc() to change the size of the memory block pointed to by
      * the pointer 'ptr' with the new size value in 'new_size'.
      */
@@ -201,6 +202,11 @@ char * generate_badchar_sequence()
         length += sprintf(ptr_badchar_array+length, "%02x", i);
     }
 
+    /* call free() on 'ptr_badchar_array' as we no longer need access to that
+     * memory location.
+     */
+    free(ptr_badchar_array);
+
     /* return the character array pointer to the caller function */
     return ptr_badchar_array;
 }
@@ -230,6 +236,9 @@ char * read_and_store_char_input(int *array_size)
                                               (*array_size+=1));
         i++;
     }
+
+    /* call free() on 'ptr_char_array' */
+    free(ptr_char_array);
 
     /* return a pointer to caller function */
     return ptr_char_array;
