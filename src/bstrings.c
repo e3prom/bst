@@ -202,11 +202,6 @@ char * generate_badchar_sequence()
         length += sprintf(ptr_badchar_array+length, "%02x", i);
     }
 
-    /* call free() on 'ptr_badchar_array' as we no longer need access to that
-     * memory location.
-     */
-    free(ptr_badchar_array);
-
     /* return the character array pointer to the caller function */
     return ptr_badchar_array;
 }
@@ -236,9 +231,6 @@ char * read_and_store_char_input(int *array_size)
                                               (*array_size+=1));
         i++;
     }
-
-    /* call free() on 'ptr_char_array' */
-    free(ptr_char_array);
 
     /* return a pointer to caller function */
     return ptr_char_array;
@@ -340,6 +332,8 @@ int main(int argc, char *argv[])
         char *ptr_char_array = read_and_store_char_input(&array_size);
         /* call to output_hex_escaped_string() */
         output_hex_escaped_string(ptr_char_array, &array_size, string_width);
+        /* call to free() for 'ptr_char_array' */
+        free(ptr_char_array);
     }
 
     /* if -b|--gen-badchar option is given */
@@ -358,6 +352,8 @@ int main(int argc, char *argv[])
         char *ptr_char_array = generate_badchar_sequence();
         /* call to output_hex_escaped_string() */
         output_hex_escaped_string(ptr_char_array, &array_size, string_width);
+        /* call to free() for 'ptr_char_array' */
+        free(ptr_char_array);
     }
 
     return 0;
