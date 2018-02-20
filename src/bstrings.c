@@ -96,45 +96,59 @@ void output_hex_escaped_string(char *ptr_char_array, int *array_size,
     * loop through the body until we reach the end of the array.
     */
     for (i = 0; i < *array_size; i++) {
+        /* initialize c to the i(th) element of the array */
         c = ptr_char_array[i];
 
         /* filter out any characters outside of the hexadecimal ASCII character
-         * range. The below conditional statement may need some improvement.
+         * range.
          */
-        if ((c >= 48 && c <= 57) || (c >= 65 && c <= 70) ||
-            (c >= 97 && c <= 102)) {
-            /* if the hex escaped char array index is divible by two, we've a
-             * pair of hexadecimal characters (or byte), we need to escape
-             * using the binary string escape characters '\' and 'x'.
+        switch (c) {
+            /* if the character is within the hexadecimal characters range.
+             * ranges within switch case's constants are supported by GCC.
              */
-            if (ai % 2 == 0) {
-                /* if string_width is non-default */
-                if (string_width != 0) {
-                    /* ensure integer 'ai' is non-zero so we don't insert a
-                     * new line character in the first row of output. put a
-                     * new line character every string_width's byte value.
-                     */
-                    if ((ai != 0) && (ai % (string_width*2) == 0)) {
-                        putchar('\n');
+            case 48 ... 57:
+            case 65 ... 70:
+            case 97 ... 102:
+                /* if the hex escaped char array index is divible by two,
+                 * we've pair of hexadecimal characters (or byte), we need to
+                 * escape using the binary string escape characters '\' and
+                 * 'x' respectively.
+                 */
+                if (ai % 2 == 0) {
+                    /* if string_width is non-default or specified. */
+                    if (string_width != 0) {
+                        /* ensure integer 'ai' is non-zero so we don't insert
+                         * a new line character in the first row of output.
+                         * put a new line character every string_width's byte
+                         * value.
+                         */
+                        if ((ai != 0) && (ai % (string_width*2) == 0)) {
+                            putchar('\n');
+                        }
                     }
+                    putchar('\\');
+                    putchar('x');
+                    putchar(c);
+                } else {
+                    putchar(c);
                 }
-                putchar('\\');
-                putchar('x');
-                putchar(c);
-            } else {
-                putchar(c);
-            }
-
-            /* Increase the hex escaped character array index so we keep track
-             * of the pair of hexadecimal byte inside the binary string.
-             */
-            ai++;
-
-        /* catches all non-hexadcimal characters, excepted the end-of-file,
-         * the new line and the null characters respectively.
-         */
-        } else if ((c != EOF) && (c != 10) && (c != 0)) {
-            invalidhexchar++;
+                /* Increase the hex escaped character array index so we keep
+                 * track of the pair of hexadecimal byte inside the binary
+                 * string.
+                 */
+                ai++;
+                break;
+            default:    /* all non-hexadecimal characters */
+                /* catches all non-hexadcimal characters, excepted the
+                 * end-of-file, the new-line and the null characters
+                 * respectively.
+                 */
+                switch (c) {
+                    case EOF: break;
+                    case 10: break;
+                    case 0: break;
+                    default: invalidhexchar++;
+                }
         }
     }
 
