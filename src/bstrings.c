@@ -39,9 +39,9 @@ static void print_usage(FILE *stream, char *program_name)
 {
     fprintf(stream, "Usage: %s [OPTION]...\n", program_name);
     fprintf(stream, " Convert input to specified binary string format.\n\n");
-    fprintf(stream, " At least one of the below switches must be given:\n\
+    fprintf(stream, " At least one of the below options must be given:\n\
     -D, --dump-file=FILE    Dump content of file FILE in hexadecimal format\n\
-    -x, --hex-escape        Convert hexadecimal input to escaped binary string\n\
+    -x, --hex-escape        Escape input hexadecimal string\n\
     -b, --gen-badchar       Generate a bad character sequence string\n\
     \n");
     fprintf(stream, " The below switches are optional:\n\
@@ -260,8 +260,8 @@ char * read_from_file(char *filename, int *array_size, int mode)
     int c;
     /* declare pointer to FILE 'ptr_file_read' */
     FILE *ptr_file_read;
-    /* declare local pointer to character array 'ptr_char_array' */
-    char *ptr_char_array;
+    /* initialize char array pointer 'ptr_char_array' to NULL */
+    char *ptr_char_array = NULL;
 
     /* initialize pointer 'ptr_file_read' */
     ptr_file_read = fopen(filename, "r");
@@ -287,7 +287,15 @@ char * read_from_file(char *filename, int *array_size, int mode)
         /* initialize character array pointer 'ptr_char_array' by calling
          * allocate_dynamic_memory() function.
          */
-        ptr_char_array = allocate_dynamic_memory(sizeof(char));
+        switch (mode) {
+            case 1:
+                ptr_char_array = allocate_dynamic_memory(sizeof(char));
+                break;
+            case 2:
+                ptr_char_array = allocate_dynamic_memory(sizeof(char)*2);
+                *array_size += 1;
+                break;
+        }
 
         while ((c = getc(ptr_file_read)) != EOF) {
             switch (mode) {
@@ -304,13 +312,13 @@ char * read_from_file(char *filename, int *array_size, int mode)
                  * we must grow our destination character array accordingly.
                  */
                 case 2:
-                    snprintf(xc, 3, "%02X", c);
+                    snprintf(xc, 3, "%02x", c);
                     ptr_char_array[i] = (char)xc[0];
                     ptr_char_array[i+1] = (char)xc[1];
                     ptr_char_array = change_dynamic_memory(ptr_char_array,
                                                            sizeof(char) *
-                                                           (*array_size+=4));
-                    i+=3;
+                                                           (*array_size+=2));
+                    i+=2;
                     break;
             }
         }
@@ -320,7 +328,7 @@ char * read_from_file(char *filename, int *array_size, int mode)
         while ((c = getc(ptr_file_read)) != EOF)
             printf("%02x", c);
         /* put new line character after string output */
-        putchar('\n');
+        // putchar('\n');
     }
 
     /* close opened file handler */
