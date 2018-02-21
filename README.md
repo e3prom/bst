@@ -5,13 +5,14 @@ convert binary strings to various formats suitable for later inclusions in
 source codes such as those used to develop exploits in the security field.
 
 ## Features
- * Dump file in copy/paste friendly binary string format.
+ * Dump file in a copy/paste friendly binary string format.
  * Convert a plain hexadecimal input to an escaped binary string.
  * Output a "bad characters" sequence in a hexadecimal escaped binary string.
- * Limit binary strings to specified width for better readability in source codes.
+ * Limit output binary strings to specified width for easier readability.
 
 ## Dependencies
  * POSIX C Library
+ * C Compiler (GCC, clang)
  * GNU Make
  * Git
 
@@ -19,31 +20,30 @@ source codes such as those used to develop exploits in the security field.
 To build the 'bstrings' binary, simply invoke make:
 ```
 $ make
-# install bstrings to /usr/local/bin
+# by default, install bstrings to /usr/local/bin
 $ make install
 ```
 
 ## Running
 The below example show how an assembled shellcode can be easily and quickly
-dumped (-D) to standard output in a hexadecimal escaped (-x) binary string of 8
-hexadecimal digits (or 4 bytes) width (-w):
+dumped (-D) to standard output in a hexadecimal escaped (-x) binary string of
+8 hexadecimal digits width (4 bytes):
 ```
-./bstrings -x -D lnx-execve-setreuid-x86_64 -w4
-\x31\xC0\x48\x89
-\xC7\x48\x89\xC6
-\x48\x89\xC2\xB0
-\x71\x0F\x05\x31
-\xC0\x50\x48\xBB
-\x2F\x62\x69\x6E
-\x2F\x2F\x73\x68
-\x53\x48\x89\xE7
-\x50\x48\x89\xE6
-\x57\x48\x89\xE2
-\xB0\x3B\x0F\x05
+$ bstrings -x -D lnx-execve-setreuid-x86_32 -w4
+\x31\xc0\x89\xc3
+\x89\xc2\x89\xc1
+\xb0\x46\xcd\x80
+\x31\xc0\x50\x68
+\x2f\x2f\x73\x68
+\x68\x2f\x62\x69
+\x6e\x89\xe3\x50
+\x89\xe2\x53\x89
+\xe1\xb0\x0b\xcd
+\x80
 ```
 
-For a list of supported commands and the description of all available
-command-line switches, simply consult the command's help:
+For a list of supported command-line options and switches, simply consult the
+command's help:
 ```
 $ bstrings --help
 [...]
