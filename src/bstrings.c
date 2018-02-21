@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <string.h>
 #include "include/bool.h"
 #include "include/version.h"
 
@@ -267,16 +268,21 @@ char * read_from_file(char *filename, int *array_size, int mode)
 
     /* if ptr_file_read is null, return an error and exit */
     if (ptr_file_read == NULL) {
-        printf("[-] Error: input filename \"%s\" cannot be read.\n",
+        printf("Error: input filename \"%s\" cannot be read.\n",
                 filename);
         exit(EXIT_FAILURE);
     }
 
     /* before continuing let see in which mode we're in */
-    /* mode 1: we read file and store content on the heap */
-    if (mode == 1) {
+    /* mode 1+: we read file and store content on the heap */
+    if (mode >= 1) {
         /* initialize char array index */
         int i = 0;
+
+        /* declare character array 'xc' of size '3' which is enough to hold
+         * two hexadecimal digits + null-termination character.
+         */
+        char xc[3];
 
         /* initialize character array pointer 'ptr_char_array' by calling
          * allocate_dynamic_memory() function.
@@ -284,12 +290,29 @@ char * read_from_file(char *filename, int *array_size, int mode)
         ptr_char_array = allocate_dynamic_memory(sizeof(char));
 
         while ((c = getc(ptr_file_read)) != EOF) {
-            ptr_char_array[i] = (char)c;
-            ptr_char_array = change_dynamic_memory(ptr_char_array,
-                                                   sizeof(char) *
-                                                   (*array_size+=1));
-            i++;
-
+            switch (mode) {
+                /* mode 1: we simply store the character in buffer. */
+                case 1:
+                    ptr_char_array[i] = (char)c;
+                    ptr_char_array = change_dynamic_memory(ptr_char_array,
+                                                           sizeof(char) *
+                                                           (*array_size+=1));
+                    i++;
+                    break;
+                /* mode 2: here we use 'snprintf()' to format each read
+                 * character to hexadecimal. As two hex digits equal one byte,
+                 * we must grow our destination character array accordingly.
+                 */
+                case 2:
+                    snprintf(xc, 3, "%02X", c);
+                    ptr_char_array[i] = (char)xc[0];
+                    ptr_char_array[i+1] = (char)xc[1];
+                    ptr_char_array = change_dynamic_memory(ptr_char_array,
+                                                           sizeof(char) *
+                                                           (*array_size+=4));
+                    i+=3;
+                    break;
+            }
         }
     /* otherwise: we read from file and output to stdout directly */
     } else {
@@ -406,12 +429,6 @@ int main(int argc, char *argv[])
         exit(EXIT_SUCCESS);
     }
 
-    /* if -D|--dump-file option is given */
-    if (doHexDumpFile == true) {
-        /* call to read_from_file() */
-        read_from_file(fread_filename, NULL, 0);
-    }
-
     /* if -x|--hex-escape option is given */
     if (doOutputHexEscapedString == true) {
         /* initialize integer 'array_size' */
@@ -425,8 +442,13 @@ int main(int argc, char *argv[])
                        string_width);
             }
         }
+        /* if -D|--dump-file option is additionally given */
+        if (doHexDumpFile == true) {
+            /* call to read_from_file() */
+            ptr_char_array = read_from_file(fread_filename, &array_size, 2);
+        }
         /* if -f|--file option is given read from file instead of stdin */
-        if (doReadFromFile == true) {
+        else if (doReadFromFile == true) {
             /* call to read_from_file() */
             ptr_char_array = read_from_file(fread_filename, &array_size, 1);
         }
@@ -438,6 +460,16 @@ int main(int argc, char *argv[])
         output_hex_escaped_string(ptr_char_array, &array_size, string_width);
         /* call to free() for 'ptr_char_array' */
         free(ptr_char_array);
+        /* exit as we're the last action */
+        exit(EXIT_SUCCESS);
+    }
+
+    /* if -D|--dump-file option is given */
+    if (doHexDumpFile == true) {
+        /* call to read_from_file() */
+        read_from_file(fread_filename, NULL, 0);
+        /* exit as we're the last action */
+        exit(EXIT_SUCCESS);
     }
 
     /* if -b|--gen-badchar option is given */
@@ -458,6 +490,8 @@ int main(int argc, char *argv[])
         output_hex_escaped_string(ptr_char_array, &array_size, string_width);
         /* call to free() for 'ptr_char_array' */
         free(ptr_char_array);
+        /* exit as we're the last action */
+        exit(EXIT_SUCCESS);
     }
 
     return 0;
