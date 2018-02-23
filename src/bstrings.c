@@ -29,6 +29,8 @@
 
 #define BADCHAR_HEX_SEQLEN  510     /* badchar hex digits sequence length */
 #define MAX_FILENAME_LENGTH 512     /* max filename length on filesystems */
+#define MAX_ARGUMENT_LENGTH 255     /* max length of option's argument */
+
 
 /* declare the 'verbose_flag' global integer */
 static int verbose_flag;
@@ -47,6 +49,7 @@ static void print_usage(FILE *stream, char *program_name)
     fprintf(stream, " The below switches are optional:\n\
     -f, --file=FILE         Read input from file FILE instead of stdin\n\
     -w, --width=bytes       Break binary strings to specified length in bytes\n\
+    -s, --syntax=LANG       Syntax of the binary string output\n\
     -h, --help              Display this help\n\
        --interactive        Enter interactive mode\n\
        --verbose            Enable verbose output\n\
@@ -79,7 +82,7 @@ static void print_version(FILE *stream, char *program_name)
 }
 
 void output_hex_escaped_string(char *ptr_char_array, int *array_size,
-                               int string_width)
+                               int *output_lang, int string_width)
 {
     /* declare integer i and c */
     int i, c;
@@ -95,6 +98,13 @@ void output_hex_escaped_string(char *ptr_char_array, int *array_size,
     /* if interactive flag set, start the binary string on a new line */
     if (interactive_flag)
         putchar('\n');
+
+    /* if verbose flag set, we output variable names */
+    if (verbose_flag) {
+        switch (*output_lang) {
+            case 1: printf("unsigned char buffer[] =\n"); break;
+        }
+    }
 
     /* for every character of the character array 'char_array'
     * loop through the body until we reach the end of the array.
@@ -121,13 +131,22 @@ void output_hex_escaped_string(char *ptr_char_array, int *array_size,
                 if (ai % 2 == 0) {
                     /* if string_width is non-default or specified. */
                     if (string_width != 0) {
-                        /* ensure integer 'ai' is non-zero so we don't insert
+                        /* if true, we are at the end of the line.
+                         * ensure integer 'ai' is non-zero so we don't insert
                          * a new line character in the first row of output.
                          * put a new line character every string_width's byte
                          * value.
                          */
-                        if ((ai != 0) && (ai % (string_width*2) == 0)) {
-                            putchar('\n');
+                        if (ai % (string_width*2) == 0) {
+                            switch (*output_lang) {
+                                case 1:     /* C Syntax */
+                                    if (ai != 0) { putchar('\"'); }
+                                    if (ai != 0) { putchar('\n'); }
+                                    putchar('\"');
+                                    break;
+                                default:
+                                    if (ai != 0) { putchar('\n'); }
+                           }
                         }
                     }
                     putchar('\\');
@@ -349,11 +368,20 @@ int main(int argc, char *argv[])
     bool doOutputHexEscapedString, doOutputBadCharString,
          doHexDumpFile, doReadFromFile, doLimitBinaryStringWidth = false;
 
-    /* declare fread_filename character array */
+    /* declare 'fread_filename' character array */
     char fread_filename[MAX_FILENAME_LENGTH+1];
 
     /* declare 'ptr_char_array' character array pointer */
     char *ptr_char_array;
+
+    /* initialize 'output_lang' local integer */
+    int output_lang = 0;
+
+    /* initialize integer pointer 'ptr_output_lang' */
+    int *ptr_out_lang = &output_lang;
+
+    /* declare 'arg_lang' character array */
+    char arg_lang[MAX_ARGUMENT_LENGTH];
 
     /* initialite string_width to the default value of zero. */
     int string_width = 0;
@@ -371,6 +399,7 @@ int main(int argc, char *argv[])
         /* program options */
         {"file",        required_argument,  NULL, 'f'},
         {"width",       required_argument,  NULL, 'w'},
+        {"syntax",      required_argument,  NULL, 's'},
         /* version option */
         {"version",     no_argument,    NULL, '@'},
         /* help option */
@@ -379,7 +408,7 @@ int main(int argc, char *argv[])
     };
 
     /* using getopt_long() from GNU C library to parse command-line options */
-    while ((opt = getopt_long(argc, argv, ":D:xbf:w:h",
+    while ((opt = getopt_long(argc, argv, ":D:xbf:w:s:h",
                               long_options, NULL)) != -1) {
         switch (opt) {
             /* handle getopt_long() return values */
@@ -415,6 +444,14 @@ int main(int argc, char *argv[])
                     snprintf(fread_filename, MAX_FILENAME_LENGTH, "%s",
                              optarg);
                 break;
+            case 's':   /* syntax option given */
+                if (optarg != NULL) {
+                    snprintf(arg_lang, MAX_ARGUMENT_LENGTH, "%s", optarg);
+                }
+                if (strcmp(arg_lang, "c") == 0) {
+                    output_lang=1;
+                }
+                break;
             case 'w':   /* binary string width option */
                 doLimitBinaryStringWidth = true;
                 /* make sure 'optarg' isn't null before using it */
@@ -424,7 +461,7 @@ int main(int argc, char *argv[])
                      * argument.
                      */
                     string_width = atoi(optarg);
-                    }
+                }
                 break;
         }
     }
@@ -465,7 +502,8 @@ int main(int argc, char *argv[])
             ptr_char_array = read_and_store_char_input(&array_size);
         }
         /* call to output_hex_escaped_string() */
-        output_hex_escaped_string(ptr_char_array, &array_size, string_width);
+        output_hex_escaped_string(ptr_char_array, &array_size, ptr_out_lang,
+                                  string_width);
         /* call to free() for 'ptr_char_array' */
         free(ptr_char_array);
         /* exit as we're the last action */
@@ -495,7 +533,8 @@ int main(int argc, char *argv[])
         /* call to generate_badchar_sequence() */
         ptr_char_array = generate_badchar_sequence();
         /* call to output_hex_escaped_string() */
-        output_hex_escaped_string(ptr_char_array, &array_size, string_width);
+        output_hex_escaped_string(ptr_char_array, &array_size, ptr_out_lang,
+                                  string_width);
         /* call to free() for 'ptr_char_array' */
         free(ptr_char_array);
         /* exit as we're the last action */
