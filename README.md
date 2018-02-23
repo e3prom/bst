@@ -25,9 +25,9 @@ $ make install
 ```
 
 ## Running
-The below example show how an assembled shellcode can be easily and quickly
-dumped (-D) to standard output in a hexadecimal escaped (-x) binary string of
-8 hexadecimal digits width (4 bytes):
+The below example show how an assembled shellcode can be quickly dumped (-D) to
+standard output in a hexadecimal escaped (-x) binary string of 8 hex digits
+width (or 4 bytes):
 ```
 $ bstrings -x -D lnx-execve-setreuid-x86_32 -w4
 \x31\xc0\x89\xc3
@@ -50,4 +50,4 @@ $ bstrings --help
 ```
 
 ## Software License
-This software is licensed under the terms of GNU General Public License.
+This software is licensed under the terms of the GNU General Public License.
