@@ -103,6 +103,7 @@ void output_hex_escaped_string(char *ptr_char_array, int *array_size,
     if (verbose_flag) {
         switch (*output_lang) {
             case 1: printf("unsigned char buffer[] =\n"); break;
+            case 2: printf("buffer =  \"\"\n"); break;
         }
     }
 
@@ -144,6 +145,12 @@ void output_hex_escaped_string(char *ptr_char_array, int *array_size,
                                     if (ai != 0) { putchar('\n'); }
                                     putchar('\"');
                                     break;
+                                case 2:     /* Python Syntax */
+                                    if (ai != 0) { putchar('\"'); }
+                                    if (ai != 0) { putchar('\n'); }
+                                    printf("buffer += ");
+                                    putchar('\"');
+                                    break;
                                 default:
                                     if (ai != 0) { putchar('\n'); }
                            }
@@ -175,8 +182,12 @@ void output_hex_escaped_string(char *ptr_char_array, int *array_size,
         }
     }
 
-    /* put newline character after the binary string */
-    putchar('\n');
+    /* we've reached the end of the binary string output */
+    switch (*output_lang) {
+        case 1: putchar('\"'); break;
+        case 2: putchar('\"'); break;
+        default: putchar('\n');
+    }
 
     if ((verbose_flag == true) && (invalidhexchar > 0)) {
         fprintf(stdout, "[-] Warning: %d non-hexadecimal character(s) "
@@ -450,6 +461,8 @@ int main(int argc, char *argv[])
                 }
                 if (strcmp(arg_lang, "c") == 0) {
                     output_lang=1;
+                } else if (strcmp(arg_lang, "python") == 0) {
+                    output_lang=2;
                 }
                 break;
             case 'w':   /* binary string width option */
