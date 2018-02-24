@@ -5,10 +5,12 @@ convert binary strings to various formats suitable for later inclusions in
 source codes such as those used to develop exploits in the security field.
 
 ## Features
- * Dump file in a copy/paste friendly binary string format.
+ * Dump files directly to terminal in a binary string.
  * Convert a plain hexadecimal input to an escaped binary string.
- * Output a "bad characters" sequence in a hexadecimal escaped binary string.
+ * Output a ready-to-use "bad character" sequence in a hexadecimal escaped binary string.
  * Limit output binary strings to specified width for easier readability.
+ * Format output in your favorite programming language syntax for quick copy &
+   paste inclusion in source codes.
 
 ## Dependencies
  * POSIX C Library

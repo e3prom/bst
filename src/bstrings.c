@@ -182,12 +182,12 @@ void output_hex_escaped_string(char *ptr_char_array, int *array_size,
         }
     }
 
-    /* we've reached the end of the binary string output */
+    /* we've reached the end of the binary string output. */
     switch (*output_lang) {
         case 1: putchar('\"'); break;
         case 2: putchar('\"'); break;
-        default: putchar('\n');
     }
+    putchar('\n');
 
     if ((verbose_flag == true) && (invalidhexchar > 0)) {
         fprintf(stdout, "[-] Warning: %d non-hexadecimal character(s) "
@@ -537,7 +537,7 @@ int main(int argc, char *argv[])
         int array_size = BADCHAR_HEX_SEQLEN;
         /* toggle verbosity if flag set */
         if (verbose_flag == true) {
-            printf("[*] Generate bad character binary string:\n");
+            printf("[*] Generating bad character binary string.\n");
             if (doLimitBinaryStringWidth == true) {
                 printf("[+] Binary string width is limited to %d bytes.\n",
                        string_width);
