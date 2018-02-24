@@ -5,16 +5,18 @@ convert binary strings to various formats suitable for later inclusions in
 source codes such as those used to develop exploits in the security field.
 
 ## Features
- * Dump files directly to terminal in a binary string.
+ * Dump files content directly to a terminal in a binary string format.
  * Convert a plain hexadecimal input to an escaped binary string.
- * Output a ready-to-use "bad character" sequence in a hexadecimal escaped binary string.
- * Limit output binary strings to specified width for easier readability.
- * Format output in your favorite programming language syntax for quick copy &
-   paste inclusion in source codes.
+ * Output a "bad character" sequence in a hexadecimal escaped binary string.
+ * Limit output binary string width for easier readability.
+ * Format output in your favorite programming language for quick copy&paste
+   inclusions in source codes.
 
 ## Dependencies
  * POSIX C Library
- * C Compiler (GCC, clang)
+ * C Compiler
+   * GCC
+   * Clang
  * GNU Make
  * Git
 
@@ -27,6 +29,9 @@ $ make install
 ```
 
 ## Running
+![binary string toolkit
+example](https://github.com/{user}/{repo}/raw/master/docs/examples/bstrings.gif)
+
 The below example show how an assembled shellcode can be quickly dumped (-D) to
 standard output in a hexadecimal escaped (-x) binary string of 8 hex digits
 width (or 4 bytes):
@@ -44,8 +49,8 @@ $ bstrings -x -D lnx-execve-setreuid-x86_32 -w4
 \x80
 ```
 
-For a list of supported command-line options and switches, simply consult the
-command's help:
+For a list of supported command-line options, simply consult the command's
+help:
 ```
 $ bstrings --help
 [...]
