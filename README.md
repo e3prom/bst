@@ -30,7 +30,7 @@ $ make install
 
 ## Running
 ![binary string toolkit
-example](https://github.com/{user}/{repo}/raw/master/docs/examples/bstrings.gif)
+example](https://github.com/e3prom/bst/raw/master/docs/examples/bstrings.gif)
 
 The below example show how an assembled shellcode can be quickly dumped (-D) to
 standard output in a hexadecimal escaped (-x) binary string of 8 hex digits
