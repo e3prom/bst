@@ -81,8 +81,19 @@ static void print_version(FILE *stream, char *program_name)
     fprintf(stream, "For help enter \"%s --help\"\n", program_name);
 }
 
-void output_hex_escaped_string(char *ptr_char_array, int *array_size,
-                               int *output_lang, int string_width)
+/* declare struct 'bstring' */
+struct bstring {
+    /* declare pointer to character array 'ptr_char_array' */
+    char *ptr_char_array;
+    /* declare pointer to integer 'ptr_array_size' */
+    int *ptr_array_size;
+    /* declare integer 'output_lang' */
+    int output_lang;
+    /* declare integer 'string_width' */
+    int string_width;
+};
+
+void output_hex_escaped_string(struct bstring *ptr_bstr)
 {
     /* declare integer i and c */
     int i, c;
@@ -101,7 +112,7 @@ void output_hex_escaped_string(char *ptr_char_array, int *array_size,
 
     /* if verbose flag set, we output variable names */
     if (verbose_flag) {
-        switch (*output_lang) {
+        switch (ptr_bstr->output_lang) {
             case 1: printf("unsigned char buffer[] =\n"); break;
             case 2: printf("buffer =  \"\"\n"); break;
         }
@@ -110,9 +121,9 @@ void output_hex_escaped_string(char *ptr_char_array, int *array_size,
     /* for every character of the character array 'char_array'
     * loop through the body until we reach the end of the array.
     */
-    for (i = 0; i < *array_size; i++) {
+    for (i = 0; i < *ptr_bstr->ptr_array_size; i++) {
         /* initialize c to the i(th) element of the array */
-        c = ptr_char_array[i];
+        c = ptr_bstr->ptr_char_array[i];
 
         /* filter out any characters outside of the hexadecimal ASCII character
          * range.
@@ -131,15 +142,15 @@ void output_hex_escaped_string(char *ptr_char_array, int *array_size,
                  */
                 if (ai % 2 == 0) {
                     /* if string_width is non-default or specified. */
-                    if (string_width != 0) {
+                    if (ptr_bstr->string_width != 0) {
                         /* if true, we are at the end of the line.
                          * ensure integer 'ai' is non-zero so we don't insert
                          * a new line character in the first row of output.
                          * put a new line character every string_width's byte
                          * value.
                          */
-                        if (ai % (string_width*2) == 0) {
-                            switch (*output_lang) {
+                        if (ai % (ptr_bstr->string_width*2) == 0) {
+                            switch (ptr_bstr->output_lang) {
                                 case 1:     /* C Syntax */
                                     if (ai != 0) { putchar('\"'); }
                                     if (ai != 0) { putchar('\n'); }
@@ -183,7 +194,7 @@ void output_hex_escaped_string(char *ptr_char_array, int *array_size,
     }
 
     /* we've reached the end of the binary string output. */
-    switch (*output_lang) {
+    switch (ptr_bstr->output_lang) {
         case 1: putchar('\"'); break;
         case 2: putchar('\"'); break;
     }
@@ -382,20 +393,19 @@ int main(int argc, char *argv[])
     /* declare 'fread_filename' character array */
     char fread_filename[MAX_FILENAME_LENGTH+1];
 
-    /* declare 'ptr_char_array' character array pointer */
-    char *ptr_char_array;
+    /* initialize pointer 'ptr_bstr' for struct type 'bstring'.
+       the struct is allocated and stored on the heap.
+     */
+    struct bstring *ptr_bstr = malloc(sizeof *ptr_bstr);
 
-    /* initialize 'output_lang' local integer */
-    int output_lang = 0;
+    /* initialize pointer 'ptr_char_array' in struct pointed by 'ptr_bstr' */
+    ptr_bstr->ptr_char_array = allocate_dynamic_memory(sizeof(char));
 
-    /* initialize integer pointer 'ptr_output_lang' */
-    int *ptr_out_lang = &output_lang;
+    /* initialize pointer 'ptr_array_size' in struct pointed by 'ptr_bstr' */
+    ptr_bstr->ptr_array_size = malloc(sizeof(int));
 
     /* declare 'arg_lang' character array */
     char arg_lang[MAX_ARGUMENT_LENGTH];
-
-    /* initialite string_width to the default value of zero. */
-    int string_width = 0;
 
     /* getopt_long()'s long_options struct */
     static struct option long_options[] = {
@@ -460,9 +470,9 @@ int main(int argc, char *argv[])
                     snprintf(arg_lang, MAX_ARGUMENT_LENGTH, "%s", optarg);
                 }
                 if (strcmp(arg_lang, "c") == 0) {
-                    output_lang=1;
+                    ptr_bstr->output_lang=1;
                 } else if (strcmp(arg_lang, "python") == 0) {
-                    output_lang=2;
+                    ptr_bstr->output_lang=2;
                 }
                 break;
             case 'w':   /* binary string width option */
@@ -473,7 +483,7 @@ int main(int argc, char *argv[])
                      * string width from the command-line -w|--width option
                      * argument.
                      */
-                    string_width = atoi(optarg);
+                    ptr_bstr->string_width = atoi(optarg);
                 }
                 break;
         }
@@ -489,36 +499,44 @@ int main(int argc, char *argv[])
 
     /* if -x|--hex-escape option is given */
     if (doOutputHexEscapedString == true) {
-        /* initialize integer 'array_size' */
-        int array_size = 1;
+        /* initialize integer pointed by 'ptr_array_size' */
+        *(ptr_bstr->ptr_array_size) = 1;
         /* toggle verbosity if flag set */
         if (verbose_flag == true) {
             printf("[*] Convert hexadecimal input to an escaped binary string"
                    ".\n");
             if (doLimitBinaryStringWidth == true) {
                 printf("[+] Binary string width is limited to %d bytes.\n",
-                       string_width);
+                       ptr_bstr->string_width);
             }
         }
         /* if -D|--dump-file option is additionally given */
         if (doHexDumpFile == true) {
             /* call to read_from_file() */
-            ptr_char_array = read_from_file(fread_filename, &array_size, 2);
+            ptr_bstr->ptr_char_array = read_from_file(fread_filename,
+                                                      ptr_bstr->ptr_array_size,
+                                                      2);
         }
         /* if -f|--file option is given read from file instead of stdin */
         else if (doReadFromFile == true) {
             /* call to read_from_file() */
-            ptr_char_array = read_from_file(fread_filename, &array_size, 1);
+            ptr_bstr->ptr_char_array = read_from_file(fread_filename,
+                                                      ptr_bstr->ptr_array_size,
+                                                      1);
         }
         else {
             /* call to read_and_store_char_input() */
-            ptr_char_array = read_and_store_char_input(&array_size);
+            ptr_bstr->ptr_char_array =
+            read_and_store_char_input(ptr_bstr->ptr_array_size);
         }
         /* call to output_hex_escaped_string() */
-        output_hex_escaped_string(ptr_char_array, &array_size, ptr_out_lang,
-                                  string_width);
+        output_hex_escaped_string(ptr_bstr);
         /* call to free() for 'ptr_char_array' */
-        free(ptr_char_array);
+        free(ptr_bstr->ptr_char_array);
+        /* call to free() for 'ptr_array_size' */
+        free(ptr_bstr->ptr_array_size);
+        /* call to free() for 'ptr_bstr' */
+        free(ptr_bstr);
         /* exit as we're the last action */
         exit(EXIT_SUCCESS);
     }
@@ -534,22 +552,23 @@ int main(int argc, char *argv[])
     /* if -b|--gen-badchar option is given */
     if (doOutputBadCharString == true) {
         /* initialize integer 'array_size' to BADCHAR_HEX_SEQLEN bytes */
-        int array_size = BADCHAR_HEX_SEQLEN;
+        *(ptr_bstr->ptr_array_size) = BADCHAR_HEX_SEQLEN;
         /* toggle verbosity if flag set */
         if (verbose_flag == true) {
             printf("[*] Generating bad character binary string.\n");
             if (doLimitBinaryStringWidth == true) {
                 printf("[+] Binary string width is limited to %d bytes.\n",
-                       string_width);
+                       ptr_bstr->string_width);
             }
         }
         /* call to generate_badchar_sequence() */
-        ptr_char_array = generate_badchar_sequence();
+        ptr_bstr->ptr_char_array = generate_badchar_sequence();
         /* call to output_hex_escaped_string() */
-        output_hex_escaped_string(ptr_char_array, &array_size, ptr_out_lang,
-                                  string_width);
-        /* call to free() for 'ptr_char_array' */
-        free(ptr_char_array);
+        output_hex_escaped_string(ptr_bstr);
+        /* calls to free() for the various allocated memory locations */
+        free(ptr_bstr->ptr_char_array);
+        free(ptr_bstr->ptr_array_size);
+        free(ptr_bstr);
         /* exit as we're the last action */
         exit(EXIT_SUCCESS);
     }
