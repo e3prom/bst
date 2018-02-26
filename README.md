@@ -11,6 +11,7 @@ source codes such as those used to develop exploits in the security field.
  * Limit output binary string width for easier readability.
  * Format output in your favorite programming language for quick copy&paste
    inclusions in source codes.
+ * Perform indentation of the binary string output.
 
 ## Dependencies
  * POSIX C Library

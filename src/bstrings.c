@@ -49,8 +49,9 @@ static void print_usage(FILE *stream, char *program_name)
     fprintf(stream, " The below switches are optional:\n\
     -f, --file=FILE         Read input from file FILE instead of stdin\n\
     -w, --width=BYTES       Break binary strings to specified length in bytes\n\
-    -s, --syntax=LANG       Syntax of the binary string output\n\
+    -s, --syntax=LANG       Syntax of the output (case-sensitive)\n\
     -i, --indent=LENGTH     Perform indentation for given character length\n\
+    -n, --var-name=VAR      Specify buffer string variable name (verbose)\n\
     -h, --help              Display this help\n\
        --interactive        Enter interactive mode\n\
        --verbose            Enable verbose output\n\
@@ -94,6 +95,8 @@ struct bstring {
     int string_width;
     /* declare integer 'indent_width' */
     int indent_width;
+    /* declare pointer to character array 'ptr_var_name' */
+    char *ptr_var_name;
 };
 
 void output_hex_escaped_string(struct bstring *ptr_bstr)
@@ -129,8 +132,18 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
         }
         /* print variable name matching specified language */
         switch (ptr_bstr->output_lang) {
-            case 1: printf("unsigned char buffer[] =\n"); break;
-            case 2: printf("buffer =  \"\"\n"); break;
+            case 1:
+                if (ptr_bstr->ptr_var_name != NULL)
+                    printf("unsigned char %s[] =\n", ptr_bstr->ptr_var_name);
+                else
+                    printf("unsigned char buffer[] =\n");
+                break;
+            case 2:
+                if (ptr_bstr->ptr_var_name != NULL)
+                    printf("%s =  \"\"\n", ptr_bstr->ptr_var_name);
+                else
+                    printf("buffer =  \"\"\n");
+                break;
         }
     }
 
@@ -190,7 +203,13 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
                                     for (ic = 0; ic < indent_width; ic++) {
                                         putchar(32);
                                     }
-                                    printf("buffer += ");
+                                    /* if variable name specified */
+                                    if (ptr_bstr->ptr_var_name != NULL) {
+                                        printf("%s += ",
+                                               ptr_bstr->ptr_var_name);
+                                    } else {
+                                        printf("buffer += ");
+                                    }
                                     putchar('\"');
                                     break;
                                 default:
@@ -420,7 +439,7 @@ int main(int argc, char *argv[])
     /* initialize program's options flags */
     bool doOutputHexEscapedString, doOutputBadCharString,
          doHexDumpFile, doReadFromFile, doLimitBinaryStringWidth,
-         doPerformIndentation = false;
+         doLanguageDecoration, doPerformIndentation = false;
 
     /* declare 'fread_filename' character array */
     char fread_filename[MAX_FILENAME_LENGTH+1];
@@ -454,6 +473,7 @@ int main(int argc, char *argv[])
         {"width",       required_argument,  NULL, 'w'},
         {"syntax",      required_argument,  NULL, 's'},
         {"indent",      required_argument,  NULL, 'i'},
+        {"var-name",    required_argument,  NULL, 'n'},
         /* version option */
         {"version",     no_argument,    NULL, '@'},
         /* help option */
@@ -462,7 +482,7 @@ int main(int argc, char *argv[])
     };
 
     /* using getopt_long() from GNU C library to parse command-line options */
-    while ((opt = getopt_long(argc, argv, ":D:xbf:w:s:i:h",
+    while ((opt = getopt_long(argc, argv, ":D:xbf:w:s:i:n:h",
                               long_options, NULL)) != -1) {
         switch (opt) {
             /* handle getopt_long() return values */
@@ -499,13 +519,18 @@ int main(int argc, char *argv[])
                              optarg);
                 break;
             case 's':   /* syntax option given */
+                doLanguageDecoration = true;
                 if (optarg != NULL) {
                     snprintf(arg_lang, MAX_ARGUMENT_LENGTH, "%s", optarg);
                 }
-                if (strcmp(arg_lang, "c") == 0) {
+                if (strcmp(arg_lang, "c") == 0 || strcmp(arg_lang, "C") == 0) {
                     ptr_bstr->output_lang=1;
                 } else if (strcmp(arg_lang, "python") == 0) {
                     ptr_bstr->output_lang=2;
+                } else {
+                    printf("[-] Unknown language \"%s\" specified.\n",
+                           arg_lang);
+                    exit(EXIT_FAILURE);
                 }
                 break;
             case 'i':   /* indentation option given */
@@ -519,6 +544,14 @@ int main(int argc, char *argv[])
                 } else {
                     /* if option is not given, initialize to zero */
                     ptr_bstr->indent_width = 0;
+                }
+                break;
+            case 'n':   /* variable name option given */
+                if (optarg != NULL) {
+                    ptr_bstr->ptr_var_name =
+                        allocate_dynamic_memory(MAX_ARGUMENT_LENGTH);
+                    snprintf(ptr_bstr->ptr_var_name, MAX_ARGUMENT_LENGTH,
+                             "%s", optarg);
                 }
                 break;
             case 'w':   /* binary string width option */
@@ -555,8 +588,12 @@ int main(int argc, char *argv[])
                 printf("[+] Binary string width is limited to %d bytes.\n",
                        ptr_bstr->string_width);
             }
+            if (doLanguageDecoration == true) {
+                printf("[+] Output binary string for %s language syntax.\n",
+                        arg_lang);
+            }
             if (doPerformIndentation == true) {
-                printf("[+] Indentation level set to %d space characters.\n",
+                printf("[+] Indentation level set to %d character(s).\n",
                        ptr_bstr->indent_width);
             }
         }
