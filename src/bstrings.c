@@ -81,7 +81,7 @@ static void print_version(FILE *stream, char *program_name)
     fprintf(stream, "For help enter \"%s --help\"\n", program_name);
 }
 
-/* declare struct 'bstring' */
+/* struct 'bstring' definition */
 struct bstring {
     /* declare pointer to character array 'ptr_char_array' */
     char *ptr_char_array;
@@ -301,8 +301,8 @@ char * read_from_file(char *filename, int *array_size, int mode)
     int c;
     /* declare pointer to FILE 'ptr_file_read' */
     FILE *ptr_file_read;
-    /* initialize char array pointer 'ptr_char_array' to NULL */
-    char *ptr_char_array = NULL;
+    /* declare char array pointer 'ptr_char_array' */
+    char *ptr_char_array;
 
     /* initialize pointer 'ptr_file_read' */
     ptr_file_read = fopen(filename, "r");
@@ -527,7 +527,7 @@ int main(int argc, char *argv[])
         else {
             /* call to read_and_store_char_input() */
             ptr_bstr->ptr_char_array =
-            read_and_store_char_input(ptr_bstr->ptr_array_size);
+                read_and_store_char_input(ptr_bstr->ptr_array_size);
         }
         /* call to output_hex_escaped_string() */
         output_hex_escaped_string(ptr_bstr);
