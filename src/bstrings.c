@@ -48,8 +48,9 @@ static void print_usage(FILE *stream, char *program_name)
     \n");
     fprintf(stream, " The below switches are optional:\n\
     -f, --file=FILE         Read input from file FILE instead of stdin\n\
-    -w, --width=bytes       Break binary strings to specified length in bytes\n\
+    -w, --width=BYTES       Break binary strings to specified length in bytes\n\
     -s, --syntax=LANG       Syntax of the binary string output\n\
+    -i, --indent=LENGTH     Perform indentation for given character length\n\
     -h, --help              Display this help\n\
        --interactive        Enter interactive mode\n\
        --verbose            Enable verbose output\n\
@@ -91,17 +92,24 @@ struct bstring {
     int output_lang;
     /* declare integer 'string_width' */
     int string_width;
+    /* declare integer 'indent_width' */
+    int indent_width;
 };
 
 void output_hex_escaped_string(struct bstring *ptr_bstr)
 {
-    /* declare integer i and c */
-    int i, c;
+    /* declare integer i, c and ic */
+    int i, c, ic;
 
     /* initialize the hex escaped character array index to zero.
      * it keep track of the number of hex digits present in the binary string.
      */
     int ai = 0;
+
+    /* initialize local integer 'indent_width' to the value of the
+     * 'indent_width' integer in struct pointed by 'ptr_bstr' pointer.
+     */
+    int indent_width = ptr_bstr->indent_width;
 
     /* initialize integer 'invalidhexchar' to be used as a counter. */
     int invalidhexchar = 0;
@@ -110,8 +118,16 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
     if (interactive_flag)
         putchar('\n');
 
-    /* if verbose flag set, we output variable names */
+    /* if verbose flag set, we perform indentation and output variable name */
     if (verbose_flag) {
+        /* indentation loop */
+        if (indent_width > 0) {
+            for (ic = 0; ic < indent_width; ic++) {
+                /* put space character (decimal: 32) */
+                putchar(32);
+            }
+        }
+        /* print variable name matching specified language */
         switch (ptr_bstr->output_lang) {
             case 1: printf("unsigned char buffer[] =\n"); break;
             case 2: printf("buffer =  \"\"\n"); break;
@@ -151,14 +167,29 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
                          */
                         if (ai % (ptr_bstr->string_width*2) == 0) {
                             switch (ptr_bstr->output_lang) {
-                                case 1:     /* C Syntax */
+                                case 1:     /* C syntax */
+                                    /* ensure we don't put an extra character
+                                     * at the start of the binary string row
+                                     * by verifying 'ai' is not zero.
+                                     */
                                     if (ai != 0) { putchar('\"'); }
                                     if (ai != 0) { putchar('\n'); }
+                                    /* indentation loop, repeat space
+                                     * character (decimal 32) for indent_width
+                                     * value + 4 (or standard indent size).
+                                     */
+                                    for (ic = 0; ic < indent_width+4; ic++) {
+                                        putchar(32);
+                                    }
                                     putchar('\"');
                                     break;
-                                case 2:     /* Python Syntax */
+                                case 2:     /* Python syntax */
                                     if (ai != 0) { putchar('\"'); }
                                     if (ai != 0) { putchar('\n'); }
+                                    /* indentation loop */
+                                    for (ic = 0; ic < indent_width; ic++) {
+                                        putchar(32);
+                                    }
                                     printf("buffer += ");
                                     putchar('\"');
                                     break;
@@ -388,7 +419,8 @@ int main(int argc, char *argv[])
 
     /* initialize program's options flags */
     bool doOutputHexEscapedString, doOutputBadCharString,
-         doHexDumpFile, doReadFromFile, doLimitBinaryStringWidth = false;
+         doHexDumpFile, doReadFromFile, doLimitBinaryStringWidth,
+         doPerformIndentation = false;
 
     /* declare 'fread_filename' character array */
     char fread_filename[MAX_FILENAME_LENGTH+1];
@@ -421,6 +453,7 @@ int main(int argc, char *argv[])
         {"file",        required_argument,  NULL, 'f'},
         {"width",       required_argument,  NULL, 'w'},
         {"syntax",      required_argument,  NULL, 's'},
+        {"indent",      required_argument,  NULL, 'i'},
         /* version option */
         {"version",     no_argument,    NULL, '@'},
         /* help option */
@@ -429,7 +462,7 @@ int main(int argc, char *argv[])
     };
 
     /* using getopt_long() from GNU C library to parse command-line options */
-    while ((opt = getopt_long(argc, argv, ":D:xbf:w:s:h",
+    while ((opt = getopt_long(argc, argv, ":D:xbf:w:s:i:h",
                               long_options, NULL)) != -1) {
         switch (opt) {
             /* handle getopt_long() return values */
@@ -475,6 +508,19 @@ int main(int argc, char *argv[])
                     ptr_bstr->output_lang=2;
                 }
                 break;
+            case 'i':   /* indentation option given */
+                doPerformIndentation = true;
+                if (optarg != NULL) {
+                    /* read the given indentation width from the command-line
+                     * option and convert it to integer using atoi() from the
+                     * GNU C library.
+                     */
+                    ptr_bstr->indent_width = atoi(optarg);
+                } else {
+                    /* if option is not given, initialize to zero */
+                    ptr_bstr->indent_width = 0;
+                }
+                break;
             case 'w':   /* binary string width option */
                 doLimitBinaryStringWidth = true;
                 /* make sure 'optarg' isn't null before using it */
@@ -508,6 +554,10 @@ int main(int argc, char *argv[])
             if (doLimitBinaryStringWidth == true) {
                 printf("[+] Binary string width is limited to %d bytes.\n",
                        ptr_bstr->string_width);
+            }
+            if (doPerformIndentation == true) {
+                printf("[+] Indentation level set to %d space characters.\n",
+                       ptr_bstr->indent_width);
             }
         }
         /* if -D|--dump-file option is additionally given */
