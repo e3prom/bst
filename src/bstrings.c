@@ -305,10 +305,10 @@ char * generate_badchar_sequence()
 
     /* simple linear hex digits generator */
     for (i = 1; i < 256; i++) {
-        /* leveraging sprintf() to store hexadecimal digits to the character
-         * array. -- To check for buffer overflow condition.
+        /* leveraging snprintf() to store hexadecimal digits to the character
+         * array pointed by 'ptr_badchar_array'.
          */
-        length += sprintf(ptr_badchar_array+length, "%02x", i);
+        length += snprintf(ptr_badchar_array+length, 3, "%02x", i);
     }
 
     /* return the character array pointer to the caller function */
