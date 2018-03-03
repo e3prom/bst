@@ -30,24 +30,17 @@ $ make install
 ```
 
 ## Running
-![binary string toolkit
-example](https://github.com/e3prom/bst/raw/master/docs/examples/bstrings.gif)
-
 The below example show how an assembled shellcode can be quickly dumped (-D) to
 standard output in a hexadecimal escaped (-x) binary string of 8 hex digits
-width (or 4 bytes):
+width (or 4 bytes), with python syntax formatting:
 ```
-$ bstrings -x -D lnx-execve-setreuid-x86_32 -w4
-\x31\xc0\x89\xc3
-\x89\xc2\x89\xc1
-\xb0\x46\xcd\x80
-\x31\xc0\x50\x68
-\x2f\x2f\x73\x68
-\x68\x2f\x62\x69
-\x6e\x89\xe3\x50
-\x89\xe2\x53\x89
-\xe1\xb0\x0b\xcd
-\x80
+$ bstrings -D lnx-execve-setreuid-x86_64 -x --syntax=python -w8
+buffer += "\x31\xc0\x48\x89\xc7\x48\x89\xc6"
+buffer += "\x48\x89\xc2\xb0\x71\x0f\x05\x31"
+buffer += "\xc0\x50\x48\xbb\x2f\x62\x69\x6e"
+buffer += "\x2f\x2f\x73\x68\x53\x48\x89\xe7"
+buffer += "\x50\x48\x89\xe6\x57\x48\x89\xe2"
+buffer += "\xb0\x3b\x0f\x05"
 ```
 
 For a list of supported command-line options, simply consult the command's
