@@ -5,19 +5,19 @@ convert binary strings to various formats suitable for later inclusions in
 source codes such as those used to develop exploits in the security field.
 
 ## Features
- * Dump files content directly to a terminal in a binary string format.
+ * Dump files content to standard output in a binary string format.
  * Convert a plain hexadecimal input to an escaped binary string.
- * Output a "bad character" sequence in a hexadecimal escaped binary string.
- * Limit output binary string width for easier readability.
- * Format output in your favorite programming language for quick copy&paste
-   inclusions in source codes.
- * Perform indentation of the binary string output.
+ * Output a bad character sequence in various format for inclusion in exploit
+ codes.
+ * Limit output binary string width for a better readability in source codes.
+ * Format output in your favorite programming language syntax.
+ * Perform binary string variable block indentation.
 
 ## Dependencies
  * POSIX C Library
  * C Compiler
    * GCC
-   * Clang
+   * LLVM Clang
  * GNU Make
  * Git
 
@@ -30,8 +30,8 @@ $ make install
 ```
 
 ## Running
-The below example show how an assembled shellcode can be quickly dumped (-D) to
-standard output in a hexadecimal escaped (-x) binary string of 8 hex digits
+The below example show how an assembled shellcode can be quickly dumped (-D)
+to standard output in a hexadecimal escaped (-x) binary string of 8 hex digits
 width (or 4 bytes), with python syntax formatting:
 ```
 $ bstrings -D lnx-execve-setreuid-x86_64 -x --syntax=python -w8
