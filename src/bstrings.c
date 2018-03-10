@@ -76,7 +76,7 @@ static void print_version(FILE *stream, char *program_name)
                     "at:\n<https://github.com/e3prom/bst>\n");
     /* build & build time */
     if(program_build != NULL) {
-    fprintf(stream, "Git Build %s\nCompiled the %s\n", program_build,
+    fprintf(stream, "Git Build %s\nCompiled on %s\n", program_build,
             program_build_time);
     }
     /* help */
@@ -121,7 +121,7 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
     if (interactive_flag)
         putchar('\n');
 
-    /* if verbose flag set, we perform indentation and output variable name */
+    /* if verbose flag set, perform indentation and output variable name */
     if (verbose_flag) {
         /* indentation loop */
         if (indent_width > 0) {
@@ -148,9 +148,11 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
     }
 
     /* for every character of the character array 'char_array'
-    * loop through the body until we reach the end of the array.
-    */
-    for (i = 0; i < *ptr_bstr->ptr_array_size; i++) {
+     * loop through the body until we reach the end of the array.
+     * Dont't forget to account for the extra byte of the array_size's size in
+     * order to only print characters within the input string.
+     */
+    for (i = 0; i < *ptr_bstr->ptr_array_size-1; i++) {
         /* initialize c to the i(th) element of the array */
         c = ptr_bstr->ptr_char_array[i];
 
@@ -351,8 +353,8 @@ char * read_from_file(char *filename, int *array_size, int mode)
     int c;
     /* declare pointer to FILE 'ptr_file_read' */
     FILE *ptr_file_read;
-    /* declare char array pointer 'ptr_char_array' */
-    char *ptr_char_array;
+    /* initialize char array pointer 'ptr_char_array' to NULL */
+    char *ptr_char_array = NULL;
 
     /* initialize pointer 'ptr_file_read' */
     ptr_file_read = fopen(filename, "r");
@@ -393,6 +395,9 @@ char * read_from_file(char *filename, int *array_size, int mode)
                 /* mode 1: we simply store the character in buffer. */
                 case 1:
                     ptr_char_array[i] = (char)c;
+                    /* the array size will be the number of characters + one
+                     * after we reach EOF character in input.
+                     */
                     ptr_char_array = change_dynamic_memory(ptr_char_array,
                                                            sizeof(char) *
                                                            (*array_size+=1));
@@ -416,10 +421,9 @@ char * read_from_file(char *filename, int *array_size, int mode)
     /* otherwise: we read from file and output to stdout directly */
     } else {
         /* get next character from file using getc() until we reach EOF */
-        while ((c = getc(ptr_file_read)) != EOF)
+        while ((c = getc(ptr_file_read)) != EOF) {
             printf("%02x", c);
-        /* put new line character after string output */
-        // putchar('\n');
+        }
     }
 
     /* close opened file handler */
@@ -579,7 +583,7 @@ int main(int argc, char *argv[])
     /* if -x|--hex-escape option is given */
     if (doOutputHexEscapedString == true) {
         /* initialize integer pointed by 'ptr_array_size' */
-        *(ptr_bstr->ptr_array_size) = 1;
+        *(ptr_bstr->ptr_array_size) = 0;
         /* toggle verbosity if flag set */
         if (verbose_flag == true) {
             printf("[*] Convert hexadecimal input to an escaped binary string"
