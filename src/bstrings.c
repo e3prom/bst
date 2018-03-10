@@ -49,13 +49,17 @@ static void print_usage(FILE *stream, char *program_name)
     fprintf(stream, " The below switches are optional:\n\
     -f, --file=FILE         Read input from file FILE instead of stdin\n\
     -w, --width=BYTES       Break binary strings to specified length in bytes\n\
-    -s, --syntax=LANG       Syntax of the output (case-sensitive)\n\
+    -s, --syntax=LANG       Output variable using language syntax of LANG\n\
     -i, --indent=LENGTH     Perform indentation for given character length\n\
-    -n, --var-name=VAR      Specify buffer string variable name (verbose)\n\
+    -n, --var-name=VAR      Specify binary string variable name (verbose)\n\
     -h, --help              Display this help\n\
        --interactive        Enter interactive mode\n\
        --verbose            Enable verbose output\n\
        --version            Print version information\n\
+    \n");
+    fprintf(stream, " The below languages are supported (case-sensitive):\n\
+    C                       C Programming language\n\
+    python                  Python Programming language\n\
     \n");
 }
 

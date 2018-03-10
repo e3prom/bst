@@ -31,16 +31,22 @@ $ make install
 
 ## Running
 The below example show how an assembled shellcode can be quickly dumped (-D)
-to standard output in a hexadecimal escaped (-x) binary string of 8 hex digits
-width (or 4 bytes), with python syntax formatting:
+to standard output in a hexadecimal escaped (-x) binary string of 16 hexadecimal
+digits width (8 bytes), with python syntax formatting and an indentation of 4
+space characters:
 ```
-$ bstrings -D lnx-execve-setreuid-x86_64 -x --syntax=python -w8
-buffer += "\x31\xc0\x48\x89\xc7\x48\x89\xc6"
-buffer += "\x48\x89\xc2\xb0\x71\x0f\x05\x31"
-buffer += "\xc0\x50\x48\xbb\x2f\x62\x69\x6e"
-buffer += "\x2f\x2f\x73\x68\x53\x48\x89\xe7"
-buffer += "\x50\x48\x89\xe6\x57\x48\x89\xe2"
-buffer += "\xb0\x3b\x0f\x05"
+$ bstrings --verbose -x -D lnx-execve-setreuid-x86_64 --syntax=python -w8 -n shellcode --indent=4
+[*] Convert hexadecimal input to an escaped binary string.
+[+] Binary string width is limited to 8 bytes.
+[+] Output binary string for python language syntax.
+[+] Indentation level set to 4 character(s).
+    shellcode =  ""
+    shellcode += "\x31\xc0\x48\x89\xc7\x48\x89\xc6"
+    shellcode += "\x48\x89\xc2\xb0\x71\x0f\x05\x31"
+    shellcode += "\xc0\x50\x48\xbb\x2f\x62\x69\x6e"
+    shellcode += "\x2f\x2f\x73\x68\x53\x48\x89\xe7"
+    shellcode += "\x50\x48\x89\xe6\x57\x48\x89\xe2"
+    shellcode += "\xb0\x3b\x0f\x05"
 ```
 
 For a list of supported command-line options, simply consult the command's
