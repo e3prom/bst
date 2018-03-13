@@ -27,7 +27,7 @@
 #include "include/bool.h"
 #include "include/version.h"
 
-#define BADCHAR_HEX_SEQLEN  510     /* badchar hex digits sequence length */
+#define BADCHAR_HEX_SEQLEN  511     /* badchar hex digits sequence length */
 #define MAX_FILENAME_LENGTH 512     /* max filename length on filesystems */
 #define MAX_ARGUMENT_LENGTH 255     /* max length of option's argument */
 
