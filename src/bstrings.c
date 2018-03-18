@@ -98,7 +98,7 @@ struct bstring {
     /* declare integer 'string_width' */
     int string_width;
     /* declare integer 'indent_width' */
-    int indent_width;
+    unsigned int indent_width;
     /* declare pointer to character array 'ptr_var_name' */
     char *ptr_var_name;
 };
@@ -219,7 +219,14 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
                                     putchar('\"');
                                     break;
                                 default:
-                                    if (ai != 0) { putchar('\n'); }
+                                    if (ai != 0) {
+                                        putchar('\n');
+                                        /* indentation loop */
+                                        for (ic = 0; ic < indent_width; ic++)
+                                        {
+                                            putchar(32);
+                                        }
+                                    }
                            }
                         }
                     }
@@ -355,16 +362,16 @@ char * read_from_file(char *filename, int *array_size, int mode)
 {
     /* declare integer 'c' */
     int c;
-    /* declare pointer to FILE 'ptr_file_read' */
-    FILE *ptr_file_read;
+    /* declare pointer to FILE 'ptr_file_descriptor' */
+    FILE *ptr_file_descriptor;
     /* initialize char array pointer 'ptr_char_array' to NULL */
     char *ptr_char_array = NULL;
 
-    /* initialize pointer 'ptr_file_read' */
-    ptr_file_read = fopen(filename, "r");
+    /* initialize pointer 'ptr_file_descriptor' */
+    ptr_file_descriptor = fopen(filename, "r");
 
     /* if ptr_file_read is null, return an error and exit */
-    if (ptr_file_read == NULL) {
+    if (ptr_file_descriptor == NULL) {
         printf("Error: input filename \"%s\" cannot be read.\n",
                 filename);
         exit(EXIT_FAILURE);
@@ -387,6 +394,7 @@ char * read_from_file(char *filename, int *array_size, int mode)
         switch (mode) {
             case 1:
                 ptr_char_array = allocate_dynamic_memory(sizeof(char));
+                *array_size += 1;
                 break;
             case 2:
                 ptr_char_array = allocate_dynamic_memory(sizeof(char)*2);
@@ -394,7 +402,7 @@ char * read_from_file(char *filename, int *array_size, int mode)
                 break;
         }
 
-        while ((c = getc(ptr_file_read)) != EOF) {
+        while ((c = getc(ptr_file_descriptor)) != EOF) {
             switch (mode) {
                 /* mode 1: we simply store the character in buffer. */
                 case 1:
@@ -425,13 +433,13 @@ char * read_from_file(char *filename, int *array_size, int mode)
     /* otherwise: we read from file and output to stdout directly */
     } else {
         /* get next character from file using getc() until we reach EOF */
-        while ((c = getc(ptr_file_read)) != EOF) {
+        while ((c = getc(ptr_file_descriptor)) != EOF) {
             printf("%02x", c);
         }
     }
 
     /* close opened file handler */
-    fclose(ptr_file_read);
+    fclose(ptr_file_descriptor);
 
     /* return pointer to 'ptr_char_array' */
     return ptr_char_array;
@@ -515,21 +523,23 @@ int main(int argc, char *argv[])
             case 'x': doOutputHexEscapedString = true; break;
             case 'b': doOutputBadCharString = true; break;
             case 'D':   /* dump file content in hex */
-                doHexDumpFile = true;
-                if (optarg != NULL)
+                if (optarg != NULL) {
                     snprintf(fread_filename, MAX_FILENAME_LENGTH, "%s",
                              optarg);
+                    doHexDumpFile = true;
+                }
                 break;
             case 'f':   /* file to read from option */
-                doReadFromFile = true;
-                if (optarg != NULL)
+                if (optarg != NULL) {
                     snprintf(fread_filename, MAX_FILENAME_LENGTH, "%s",
                              optarg);
+                    doReadFromFile = true;
+                }
                 break;
             case 's':   /* syntax option given */
-                doLanguageDecoration = true;
                 if (optarg != NULL) {
                     snprintf(arg_lang, MAX_ARGUMENT_LENGTH, "%s", optarg);
+                    doLanguageDecoration = true;
                 }
                 if (strcmp(arg_lang, "c") == 0 || strcmp(arg_lang, "C") == 0) {
                     ptr_bstr->output_lang=1;
@@ -543,7 +553,8 @@ int main(int argc, char *argv[])
                 break;
             case 'i':   /* indentation option given */
                 doPerformIndentation = true;
-                if (optarg != NULL) {
+                if (optarg != NULL && atoi(optarg) > 0 && atoi(optarg) <
+                    MAX_ARGUMENT_LENGTH) {
                     /* read the given indentation width from the command-line
                      * option and convert it to integer using atoi() from the
                      * GNU C library.
@@ -563,7 +574,6 @@ int main(int argc, char *argv[])
                 }
                 break;
             case 'w':   /* binary string width option */
-                doLimitBinaryStringWidth = true;
                 /* make sure 'optarg' isn't null before using it */
                 if (optarg != NULL) {
                     /* using atoi() from the GNU C library to read the binary
@@ -571,6 +581,7 @@ int main(int argc, char *argv[])
                      * argument.
                      */
                     ptr_bstr->string_width = atoi(optarg);
+                    doLimitBinaryStringWidth = true;
                 }
                 break;
         }
@@ -611,15 +622,13 @@ int main(int argc, char *argv[])
             ptr_bstr->ptr_char_array = read_from_file(fread_filename,
                                                       ptr_bstr->ptr_array_size,
                                                       2);
-        }
         /* if -f|--file option is given read from file instead of stdin */
-        else if (doReadFromFile == true) {
+        } else if (doReadFromFile == true) {
             /* call to read_from_file() */
             ptr_bstr->ptr_char_array = read_from_file(fread_filename,
                                                       ptr_bstr->ptr_array_size,
                                                       1);
-        }
-        else {
+        } else {
             /* call to read_and_store_char_input() */
             ptr_bstr->ptr_char_array =
                 read_and_store_char_input(ptr_bstr->ptr_array_size);

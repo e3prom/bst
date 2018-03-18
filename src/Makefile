@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-c -Wall
+CFLAGS=-O0 -Wall -Wextra -Wformat -Wformat-security -fPIE -fstack-protector-all -D_FORTIFY_SOURCE=2
 LDFLAGS=
 GIT=/usr/bin/git
 
@@ -13,7 +13,7 @@ $(TARGET): $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
 
 .c.o:
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 version.c: check
 	cat version.in > version.c
