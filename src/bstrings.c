@@ -464,6 +464,10 @@ int main(int argc, char *argv[])
        the struct is allocated and stored on the heap.
      */
     struct bstring *ptr_bstr = malloc(sizeof *ptr_bstr);
+    if (ptr_bstr == NULL) {
+        fprintf(stderr, "fatal error: memory allocation failure.");
+        exit(EXIT_FAILURE);
+    }
 
     /* initialize pointer 'ptr_char_array' in struct pointed by 'ptr_bstr' */
     ptr_bstr->ptr_char_array = allocate_dynamic_memory(sizeof(char));
