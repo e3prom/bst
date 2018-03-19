@@ -278,7 +278,8 @@ char * allocate_dynamic_memory(int alloc_size)
 
     /* error handling: on errors malloc() returns NULL. */
     if (ptr == NULL) {
-        printf("%d byte(s) memory allocation error.", alloc_size);
+        fprintf(stderr, "fatal error: %d byte(s) memory allocation error.",
+                alloc_size);
         exit(EXIT_FAILURE);
     }
 
@@ -294,7 +295,8 @@ char * change_dynamic_memory(char *ptr, int new_size)
 
     /* error handling: on errors realloc() returns NULL. */
     if (new_ptr == NULL) {
-        printf("%d byte(s) memory re-allocation error.", new_size);
+        fprintf(stderr, "fatal error: %d byte(s) memory re-allocation error.",
+                new_size);
         exit(EXIT_FAILURE);
     }
 
@@ -372,7 +374,7 @@ char * read_from_file(char *filename, int *array_size, int mode)
 
     /* if ptr_file_read is null, return an error and exit */
     if (ptr_file_descriptor == NULL) {
-        printf("Error: input filename \"%s\" cannot be read.\n",
+        fprintf(stderr, "fatal error: input filename \"%s\" cannot be read.\n",
                 filename);
         exit(EXIT_FAILURE);
     }
