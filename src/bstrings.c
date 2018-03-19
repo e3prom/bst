@@ -91,13 +91,13 @@ static void print_version(FILE *stream, char *program_name)
 struct bstring {
     /* declare pointer to character array 'ptr_char_array' */
     char *ptr_char_array;
-    /* declare pointer to integer 'ptr_array_size' */
-    int *ptr_array_size;
-    /* declare integer 'output_lang' */
-    int output_lang;
-    /* declare integer 'string_width' */
-    int string_width;
-    /* declare integer 'indent_width' */
+    /* declare pointer to unsigned integer 'ptr_array_size' */
+    unsigned int *ptr_array_size;
+    /* declare unsigned integer 'output_lang' */
+    unsigned int output_lang;
+    /* declare unsigned integer 'string_width' */
+    unsigned int string_width;
+    /* declare unsigned integer 'indent_width' */
     unsigned int indent_width;
     /* declare pointer to character array 'ptr_var_name' */
     char *ptr_var_name;
@@ -106,7 +106,7 @@ struct bstring {
 void output_hex_escaped_string(struct bstring *ptr_bstr)
 {
     /* declare integer i, c and ic */
-    int i, c, ic;
+    unsigned int i, c, ic;
 
     /* initialize the hex escaped character array index to zero.
      * it keep track of the number of hex digits present in the binary string.
@@ -116,7 +116,7 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
     /* initialize local integer 'indent_width' to the value of the
      * 'indent_width' integer in struct pointed by 'ptr_bstr' pointer.
      */
-    int indent_width = ptr_bstr->indent_width;
+    unsigned int indent_width = ptr_bstr->indent_width;
 
     /* initialize integer 'invalidhexchar' to be used as a counter. */
     int invalidhexchar = 0;
@@ -269,7 +269,7 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
     }
 }
 
-char * allocate_dynamic_memory(int alloc_size)
+char * allocate_dynamic_memory(unsigned int alloc_size)
 {
     /* use malloc() to allocate dynamic memory and then return to the caller
      * function the memory location allocated on the heap.
@@ -286,7 +286,7 @@ char * allocate_dynamic_memory(int alloc_size)
     return ptr;
 }
 
-char * change_dynamic_memory(char *ptr, int new_size)
+char * change_dynamic_memory(char *ptr, unsigned int new_size)
 {
     /* call to realloc() to change the size of the memory block pointed to by
      * the pointer 'ptr' with the new size value in 'new_size'.
@@ -316,7 +316,7 @@ char * generate_badchar_sequence()
                                                       BADCHAR_HEX_SEQLEN);
 
     /* initialize length integer */
-    int length = 0;
+    unsigned int length = 0;
 
     /* simple linear hex digits generator */
     for (i = 1; i < 256; i++) {
@@ -330,12 +330,12 @@ char * generate_badchar_sequence()
     return ptr_badchar_array;
 }
 
-char * read_and_store_char_input(int *array_size)
+char * read_and_store_char_input(unsigned int *array_size)
 {
     /* declare integer 'c' which will hold input character. */
     int c;
     /* initialize integer 'i' which will be used as an array index. */
-    int i = 0;
+    unsigned int i = 0;
 
     /* if in interactive mode */
     if (interactive_flag)
@@ -360,7 +360,7 @@ char * read_and_store_char_input(int *array_size)
     return ptr_char_array;
 }
 
-char * read_from_file(char *filename, int *array_size, int mode)
+char * read_from_file(char *filename, unsigned int *array_size, int mode)
 {
     /* declare integer 'c' */
     int c;
@@ -614,11 +614,11 @@ int main(int argc, char *argv[])
                        ptr_bstr->string_width);
             }
             if (doLanguageDecoration == true) {
-                printf("[+] Output binary string for %s language syntax.\n",
+                printf("[+] Output binary string using %s language syntax.\n",
                         arg_lang);
             }
             if (doPerformIndentation == true) {
-                printf("[+] Indentation level set to %d character(s).\n",
+                printf("[+] Indentation level set to %d space character(s).\n",
                        ptr_bstr->indent_width);
             }
         }
