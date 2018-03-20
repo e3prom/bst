@@ -346,6 +346,9 @@ char * read_and_store_char_input(unsigned int *array_size)
      */
     char *ptr_char_array = allocate_dynamic_memory(sizeof(char));
 
+    /* increase array_size to 1 to store the first character */
+    *array_size += 1;
+
     /* store each input character into the character array 'ptr_char_array'
      * until we reach EOF.
      */
@@ -493,8 +496,8 @@ int main(int argc, char *argv[])
     /* initialize 'indent_width' in struct pointed by 'ptr_bstr' */
     ptr_bstr->indent_width = 0;
 
-    /* declare 'arg_lang' character array */
-    char arg_lang[MAX_ARGUMENT_LENGTH];
+    /* initialize 'arg_lang' character array */
+    char arg_lang[MAX_ARGUMENT_LENGTH] = "undefined";
 
     /* getopt_long()'s long_options struct */
     static struct option long_options[] = {
@@ -568,7 +571,7 @@ int main(int argc, char *argv[])
                 } else if (strcmp(arg_lang, "python") == 0) {
                     ptr_bstr->output_lang=2;
                 } else {
-                    printf("[-] Unknown language \"%s\" specified.\n",
+                    printf("[-] Error: Unknown specified language \"%s\".\n",
                            arg_lang);
                     exit(EXIT_FAILURE);
                 }
@@ -631,7 +634,7 @@ int main(int argc, char *argv[])
             }
             if (doLanguageDecoration == true) {
                 printf("[+] Output binary string using %s language syntax.\n",
-                        arg_lang);
+                       arg_lang);
             }
             if (doPerformIndentation == true) {
                 printf("[+] Indentation level set to %d space character(s).\n",
