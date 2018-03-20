@@ -126,7 +126,7 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
         putchar('\n');
 
     /* if verbose flag set, perform indentation and output variable name */
-    if (verbose_flag) {
+    if (verbose_flag == true) {
         /* indentation loop */
         if (indent_width > 0) {
             for (ic = 0; ic < indent_width; ic++) {
@@ -460,9 +460,13 @@ int main(int argc, char *argv[])
     int opt;
 
     /* initialize program's options flags */
-    bool doOutputHexEscapedString, doOutputBadCharString,
-         doHexDumpFile, doReadFromFile, doLimitBinaryStringWidth,
-         doLanguageDecoration, doPerformIndentation = false;
+    bool doOutputHexEscapedString = false;
+    bool doOutputBadCharString = false;
+    bool doHexDumpFile = false;
+    bool doReadFromFile = false;
+    bool doLimitBinaryStringWidth = false;
+    bool doLanguageDecoration = false;
+    bool doPerformIndentation = false;
 
     /* declare 'fread_filename' character array */
     char fread_filename[MAX_FILENAME_LENGTH+1];
@@ -481,6 +485,13 @@ int main(int argc, char *argv[])
 
     /* initialize pointer 'ptr_array_size' in struct pointed by 'ptr_bstr' */
     ptr_bstr->ptr_array_size = malloc(sizeof(int));
+    if (ptr_bstr->ptr_array_size == NULL) {
+        fprintf(stderr, "fatal error: memory allocation failure.");
+        exit(EXIT_FAILURE);
+    }
+
+    /* initialize 'indent_width' in struct pointed by 'ptr_bstr' */
+    ptr_bstr->indent_width = 0;
 
     /* declare 'arg_lang' character array */
     char arg_lang[MAX_ARGUMENT_LENGTH];
@@ -488,8 +499,8 @@ int main(int argc, char *argv[])
     /* getopt_long()'s long_options struct */
     static struct option long_options[] = {
         /* verbosity flags */
-        {"verbose",     no_argument,    &verbose_flag, 1},
-        {"quiet",       no_argument,    &verbose_flag, 0},
+        {"verbose",     no_argument,    &verbose_flag, true},
+        {"quiet",       no_argument,    &verbose_flag, false},
         {"interactive", no_argument,    &interactive_flag, 1},
         /* program actions */
         {"hex-escape",  no_argument,        NULL, 'x'},
@@ -530,7 +541,7 @@ int main(int argc, char *argv[])
                 print_version(stderr, argv[0]);
                 exit(EXIT_SUCCESS);
             /* program's commands and options */
-            case 'v': verbose_flag = 1; break;
+            case 'v': verbose_flag = true; break;
             case 'x': doOutputHexEscapedString = true; break;
             case 'b': doOutputBadCharString = true; break;
             case 'D':   /* dump file content in hex */
@@ -572,14 +583,14 @@ int main(int argc, char *argv[])
                      */
                     ptr_bstr->indent_width = atoi(optarg);
                 } else {
-                    /* if option is not given, initialize to zero */
+                    /* if option given but out of range: */
                     ptr_bstr->indent_width = 0;
                 }
                 break;
             case 'n':   /* variable name option given */
                 if (optarg != NULL) {
                     ptr_bstr->ptr_var_name =
-                        allocate_dynamic_memory(MAX_ARGUMENT_LENGTH);
+                     allocate_dynamic_memory(MAX_ARGUMENT_LENGTH);
                     snprintf(ptr_bstr->ptr_var_name, MAX_ARGUMENT_LENGTH,
                              "%s", optarg);
                 }
