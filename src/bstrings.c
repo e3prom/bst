@@ -289,7 +289,7 @@ char * allocate_dynamic_memory(unsigned int alloc_size)
 char * change_dynamic_memory(char *ptr, unsigned int new_size)
 {
     /* call to realloc() to change the size of the memory block pointed to by
-     * the pointer 'ptr' with the new size value in 'new_size'.
+     * the pointer 'new_ptr' with the new size value in 'new_size'.
      */
     char *new_ptr = realloc(ptr, new_size);
 
@@ -400,7 +400,12 @@ char * read_from_file(char *filename, unsigned int *array_size, int mode)
                 break;
             case 2:
                 ptr_char_array = allocate_dynamic_memory(sizeof(char)*2);
-                *array_size += 1;
+                /* when first dereferenced for change_dynamic_memory() below
+                 * the array size should be 2, and increased by two at each
+                 * iteration of the below while loop. -- fix heap-buffer
+                 * overflow.
+                 */
+                *array_size += 2;
                 break;
         }
 
