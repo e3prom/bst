@@ -2,16 +2,15 @@
 ## Summary
 The Binary String Toolkit or BST for short is a rather simple utility to
 convert binary strings to various formats suitable for later inclusions in
-source codes such as those used to develop exploits in the security field.
+source codes, such as those used to develop exploits in the security field.
 
 ## Features
  * Dump files content to standard output in a binary string format.
  * Convert a plain hexadecimal input to an escaped binary string.
- * Output a bad character sequence in various format for inclusion in exploit
- codes.
- * Limit output binary string width for better readability in source codes.
+ * Output a sequence of bad characters for testing proof of concept code.
+ * Limit the width of binary strings for better readability in source codes.
  * Format output in your favorite programming language's syntax.
- * Perform binary string variable block indentation.
+ * Perform binary variable block indentation.
 
 ## Dependencies
  * POSIX C Library
@@ -22,7 +21,7 @@ source codes such as those used to develop exploits in the security field.
  * Git
 
 ## Building
-To build and install the 'bstrings' binary:
+To build and install the 'bstrings' binary, simply do:
 ```
 $ git clone https://github.com/e3prom/bst
 $ cd bst
@@ -34,9 +33,10 @@ $ make install
 ## Usage
 The below example show how an assembled shellcode can be quickly dumped (-D)
 to standard output in a hexadecimal escaped (-x) binary string of 16 hexadecimal
-digits width (8 bytes), with python syntax formatting and an indentation of 4
-space characters:
+digits width (or 8 bytes), with Python syntax formatting and an indentation of
+4 space characters:
 ```
+$ bstrings --verbose -x -D lnx-execve-setreuid-x86_64 -w8 -i 4 --syntax=python
 [*] Convert hexadecimal input to an escaped binary string.
 [+] Binary string width is limited to 8 bytes.
 [+] Output binary string using python language syntax.
@@ -51,8 +51,9 @@ space characters:
 ```
 
 You can also use bstrings to output an automatically indented bad character
-sequence in your favorite programming language:
+sequence, and thus in your favorite programming language:
 ```
+$ bstrings --verbose -b -w12 -i 4 --syntax=c -n badchar
 [*] Generating bad character binary string.
 [+] Binary string width is limited to 12 bytes.
     unsigned char badchar[] =
@@ -80,7 +81,7 @@ sequence in your favorite programming language:
         "\xfd\xfe\xff"
 ```
 
-For a list of supported command-line options, simply use the '--help' switch:
+For a list of supported command-line options, simply execute bstrings with the '--help' switch:
 ```
 $ bstrings --help
 Usage: ./bstrings [OPTION]...
@@ -107,6 +108,10 @@ Usage: ./bstrings [OPTION]...
     python                  Python Programming language
 
 ```
+
+## Contribution
+Feel free to contribute to this project by submitting your codes and by reporting
+issues or bugs.
 
 ## Software License
 This software is licensed under the terms of the GNU General Public License.
