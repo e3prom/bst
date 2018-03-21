@@ -156,7 +156,7 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
      * Dont't forget to account for the extra byte of the array_size's size in
      * order to only print characters within the input string.
      */
-    for (i = 0; i < *ptr_bstr->ptr_array_size-1; i++) {
+    for (i = 0; i < *ptr_bstr->ptr_array_size; i++) {
         /* initialize c to the i(th) element of the array */
         c = ptr_bstr->ptr_char_array[i];
 
@@ -450,6 +450,16 @@ char * read_from_file(char *filename, unsigned int *array_size, int mode)
 
     /* close opened file handler */
     fclose(ptr_file_descriptor);
+
+    /* adjust array size according to the read mode */
+    switch (mode) {
+        case 1:
+            (*array_size-=1);
+            break;
+        case 2:
+            (*array_size-=2);
+            break;
+    }
 
     /* return pointer to 'ptr_char_array' */
     return ptr_char_array;
