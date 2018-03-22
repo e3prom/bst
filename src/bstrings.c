@@ -30,7 +30,8 @@
 #define BADCHAR_HEX_SEQLEN  511     /* badchar hex digits sequence length */
 #define MAX_FILENAME_LENGTH 512     /* max filename length on filesystems */
 #define MAX_ARGUMENT_LENGTH 255     /* max length of option's argument */
-
+#define MIN_ITER_TIL_LCHUNK   8     /* min heap chunk size until larger chunks
+                                       are allocated from memory */
 
 /* declare the 'verbose_flag' global integer */
 static int verbose_flag;
@@ -278,7 +279,7 @@ void * allocate_dynamic_memory(unsigned int alloc_size)
 
     /* error handling: on errors malloc() returns NULL. */
     if (ptr == NULL) {
-        fprintf(stderr, "fatal error: %d byte(s) memory allocation failure.",
+        fprintf(stderr, "Error: %d byte(s) memory allocation failure.\n",
                 alloc_size);
         exit(EXIT_FAILURE);
     }
@@ -295,7 +296,7 @@ void * change_dynamic_memory(char *ptr, unsigned int new_size)
 
     /* error handling: on errors realloc() returns NULL. */
     if (new_ptr == NULL) {
-        fprintf(stderr, "fatal error: %d byte(s) memory re-allocation error.",
+        fprintf(stderr, "Error: %d byte(s) memory re-allocation error.\n",
                 new_size);
         exit(EXIT_FAILURE);
     }
@@ -334,8 +335,12 @@ char * read_and_store_char_input(unsigned int *array_size)
 {
     /* declare integer 'c' which will hold input character. */
     int c;
-    /* initialize integer 'i' which will be used as an array index. */
+    /* initialize unsigned integer 'i' which will be used as an array index. */
     unsigned int i = 0;
+    /* initialize unsigned integer 'as' which holds the memory allocation
+     * size. Here the value must equals one character due to the memory allocation
+     * being done after character write. */
+    unsigned int as = sizeof(char);
 
     /* if in interactive mode */
     if (interactive_flag)
@@ -346,7 +351,7 @@ char * read_and_store_char_input(unsigned int *array_size)
      */
     char *ptr_char_array = allocate_dynamic_memory(sizeof(char));
 
-    /* increase array_size to 1 to store the first character */
+    /* increase array_size to account for the first character. */
     *array_size += 1;
 
     /* store each input character into the character array 'ptr_char_array'
@@ -354,8 +359,26 @@ char * read_and_store_char_input(unsigned int *array_size)
      */
     while ((c = getchar()) != EOF) {
         ptr_char_array[i] = (char)c;
-        ptr_char_array = change_dynamic_memory(ptr_char_array, sizeof(char) *
-                                              (*array_size+=1));
+        /* perform small allocations until MIN_ITER_TIL_LCHUNK */
+        if (i < MIN_ITER_TIL_LCHUNK) {
+            ptr_char_array = change_dynamic_memory(ptr_char_array,
+                                                   sizeof(char) *
+                                                   (*array_size+=1));
+        /* perform larger memory allocations in increments of 8 bytes. */
+        } else {
+            /* when the index is divisible by the allocation size, perform a
+             * new, larger memory allocation. This should reduce the number of
+             * library calls to realloc().
+             */
+            if (i % as == 0) {
+                ptr_char_array = change_dynamic_memory(ptr_char_array,
+                                                       sizeof(char) *
+                                                       (as += (i/8) * 8));
+            }
+	    /* update the array size */
+            *array_size += 1;
+        }
+	/* increment the array index */
         i++;
     }
 
@@ -377,7 +400,7 @@ char * read_from_file(char *filename, unsigned int *array_size, int mode)
 
     /* if ptr_file_read is null, return an error and exit */
     if (ptr_file_descriptor == NULL) {
-        fprintf(stderr, "fatal error: input filename \"%s\" cannot be read.\n",
+        fprintf(stderr, "Error: input filename \"%s\" cannot be read.\n",
                 filename);
         exit(EXIT_FAILURE);
     }
@@ -387,6 +410,9 @@ char * read_from_file(char *filename, unsigned int *array_size, int mode)
     if (mode >= 1) {
         /* initialize char array index */
         int i = 0;
+
+        /* initialize array size 'as' */
+        unsigned int as = sizeof(char);
 
         /* declare character array 'xc' of size '3' which is enough to hold
          * two hexadecimal digits + null-termination character.
@@ -417,12 +443,33 @@ char * read_from_file(char *filename, unsigned int *array_size, int mode)
                 /* mode 1: we simply store the character in buffer. */
                 case 1:
                     ptr_char_array[i] = (char)c;
-                    /* the array size will be the number of characters + one
-                     * after we reach EOF character in input.
+                    /* perform small 1-byte allocations until we reach
+                     * MIN_ITER_TIL_LCHUNK.
                      */
-                    ptr_char_array = change_dynamic_memory(ptr_char_array,
-                                                           sizeof(char) *
-                                                           (*array_size+=1));
+                    if (i < MIN_ITER_TIL_LCHUNK) {
+                        /* the array size will be the number of characters + one
+                        * after we reach EOF character in input.
+                        */
+                        ptr_char_array = change_dynamic_memory(ptr_char_array,
+                                                               sizeof(char) *
+                                                               (*array_size+=1));
+                    /* perform larger memory allocations in increments of 8
+                     * bytes.
+                     */
+                    } else {
+                        /* when the index is divisible by the allocation size, perform a
+                         * new, larger memory allocation. This should reduce the number of
+                         * library calls to realloc().
+                         */
+                        if (i % as == 0) {
+                            ptr_char_array =
+                             change_dynamic_memory(ptr_char_array,
+                                                   sizeof(char) *
+                                                   (as += (i/8) * 8));
+                        }
+                        /* update the array size */
+                        *array_size += 1;
+                    }
                     i++;
                     break;
                 /* mode 2: here we use 'snprintf()' to format each read
@@ -433,9 +480,20 @@ char * read_from_file(char *filename, unsigned int *array_size, int mode)
                     snprintf(xc, 3, "%02x", c);
                     ptr_char_array[i] = (char)xc[0];
                     ptr_char_array[i+1] = (char)xc[1];
-                    ptr_char_array = change_dynamic_memory(ptr_char_array,
-                                                           sizeof(char) *
-                                                           (*array_size+=2));
+                    /* heap memory allocation */
+                    if (i < MIN_ITER_TIL_LCHUNK) {
+                        ptr_char_array = change_dynamic_memory(ptr_char_array,
+                                                               sizeof(char) *
+                                                               (*array_size+=2));
+                    } else {
+                        if (i % as == 0) {
+                            ptr_char_array = change_dynamic_memory(ptr_char_array,
+								   sizeof(char) *
+								   (as+=(i/8)*8)*2);
+                        }
+			/* update the array size */
+			*array_size += 2;
+                    }
                     i+=2;
                     break;
             }
