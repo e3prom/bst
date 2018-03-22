@@ -269,7 +269,7 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
     }
 }
 
-char * allocate_dynamic_memory(unsigned int alloc_size)
+void * allocate_dynamic_memory(unsigned int alloc_size)
 {
     /* use malloc() to allocate dynamic memory and then return to the caller
      * function the memory location allocated on the heap.
@@ -278,7 +278,7 @@ char * allocate_dynamic_memory(unsigned int alloc_size)
 
     /* error handling: on errors malloc() returns NULL. */
     if (ptr == NULL) {
-        fprintf(stderr, "fatal error: %d byte(s) memory allocation error.",
+        fprintf(stderr, "fatal error: %d byte(s) memory allocation failure.",
                 alloc_size);
         exit(EXIT_FAILURE);
     }
@@ -286,7 +286,7 @@ char * allocate_dynamic_memory(unsigned int alloc_size)
     return ptr;
 }
 
-char * change_dynamic_memory(char *ptr, unsigned int new_size)
+void * change_dynamic_memory(char *ptr, unsigned int new_size)
 {
     /* call to realloc() to change the size of the memory block pointed to by
      * the pointer 'new_ptr' with the new size value in 'new_size'.
@@ -487,21 +487,13 @@ int main(int argc, char *argv[])
     /* initialize pointer 'ptr_bstr' for struct type 'bstring'.
        the struct is allocated and stored on the heap.
      */
-    struct bstring *ptr_bstr = malloc(sizeof *ptr_bstr);
-    if (ptr_bstr == NULL) {
-        fprintf(stderr, "fatal error: memory allocation failure.");
-        exit(EXIT_FAILURE);
-    }
+    struct bstring *ptr_bstr = allocate_dynamic_memory(sizeof *ptr_bstr);
 
     /* initialize pointer 'ptr_char_array' in struct pointed by 'ptr_bstr' */
     ptr_bstr->ptr_char_array = allocate_dynamic_memory(sizeof(char));
 
     /* initialize pointer 'ptr_array_size' in struct pointed by 'ptr_bstr' */
-    ptr_bstr->ptr_array_size = malloc(sizeof(int));
-    if (ptr_bstr->ptr_array_size == NULL) {
-        fprintf(stderr, "fatal error: memory allocation failure.");
-        exit(EXIT_FAILURE);
-    }
+    ptr_bstr->ptr_array_size = allocate_dynamic_memory(sizeof(int));
 
     /* initialize 'indent_width' in struct pointed by 'ptr_bstr' */
     ptr_bstr->indent_width = 0;
