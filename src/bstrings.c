@@ -373,7 +373,7 @@ char * read_and_store_char_input(unsigned int *array_size)
             if (i % as == 0) {
                 ptr_char_array = change_dynamic_memory(ptr_char_array,
                                                        sizeof(char) *
-                                                       (as += (i/8) * 8));
+                                                       (as+=(i/8)*8));
             }
 	    /* update the array size */
             *array_size += 1;
@@ -463,9 +463,13 @@ char * read_from_file(char *filename, unsigned int *array_size, int mode)
                          */
                         if (i % as == 0) {
                             ptr_char_array =
+                             /* realloc by a factor of 8 + 1 character to
+                              * accodomate the next character in the next
+                              * iteration.
+                              */
                              change_dynamic_memory(ptr_char_array,
                                                    sizeof(char) *
-                                                   (as += (i/8) * 8));
+                                                   (as+=(i/8)*8)+1);
                         }
                         /* update the array size */
                         *array_size += 1;
@@ -487,9 +491,13 @@ char * read_from_file(char *filename, unsigned int *array_size, int mode)
                                                                (*array_size+=2));
                     } else {
                         if (i % as == 0) {
+                            /* perform reallocation by a factor of 8 + 2
+                             * characters to accodomate them at the next
+                             * iteration.
+                             */
                             ptr_char_array = change_dynamic_memory(ptr_char_array,
 								   sizeof(char) *
-								   (as+=(i/8)*8)*2);
+								   (as+=(i/8)*8)*2+2);
                         }
 			/* update the array size */
 			*array_size += 2;
