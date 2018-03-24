@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <string.h>
+#include <limits.h>
 #include "include/bool.h"
 #include "include/version.h"
 
@@ -304,7 +305,7 @@ void * change_dynamic_memory(char *ptr, unsigned int new_size)
     return new_ptr;
 }
 
-char * generate_badchar_sequence()
+char * generate_badchar_sequence(char *ptr_badchar_array)
 {
     /* declare integer i */
     int i;
@@ -313,8 +314,8 @@ char * generate_badchar_sequence()
      * allocate_dynamic_memory() function with a fixed allocation size of 510
      * bytes, the latter being the length we need to hold all hex digits.
     */
-    char *ptr_badchar_array = allocate_dynamic_memory(sizeof(char) *
-                                                      BADCHAR_HEX_SEQLEN);
+    ptr_badchar_array = change_dynamic_memory(ptr_badchar_array, sizeof(char)
+                                              * BADCHAR_HEX_SEQLEN);
 
     /* initialize length integer */
     unsigned int length = 0;
@@ -373,11 +374,18 @@ char * read_and_store_char_input(unsigned int *array_size)
             if (i % as == 0) {
                 ptr_char_array = change_dynamic_memory(ptr_char_array,
                                                        sizeof(char) *
-                                                       (as+=(i/8)*8));
+                                                       (as+=(i/8)*8)+1);
             }
 	    /* update the array size */
             *array_size += 1;
         }
+
+        /* unsigned integer overflow check for 'as'*/
+        if (UINT_MAX - ((i/8)*8) < as) {
+            printf("Error: integer overflow condition detected.\n");
+            exit(EXIT_FAILURE);
+        }
+
 	/* increment the array index */
         i++;
     }
@@ -386,14 +394,12 @@ char * read_and_store_char_input(unsigned int *array_size)
     return ptr_char_array;
 }
 
-char * read_from_file(char *filename, unsigned int *array_size, int mode)
+void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
 {
     /* declare integer 'c' */
     int c;
     /* declare pointer to FILE 'ptr_file_descriptor' */
     FILE *ptr_file_descriptor;
-    /* initialize char array pointer 'ptr_char_array' to NULL */
-    char *ptr_char_array = NULL;
 
     /* initialize pointer 'ptr_file_descriptor' */
     ptr_file_descriptor = fopen(filename, "r");
@@ -419,22 +425,19 @@ char * read_from_file(char *filename, unsigned int *array_size, int mode)
          */
         char xc[3];
 
-        /* initialize character array pointer 'ptr_char_array' by calling
-         * allocate_dynamic_memory() function.
-         */
         switch (mode) {
             case 1:
-                ptr_char_array = allocate_dynamic_memory(sizeof(char));
-                *array_size += 1;
+                *(ptr_bstr->ptr_array_size) += 1;
                 break;
             case 2:
-                ptr_char_array = allocate_dynamic_memory(sizeof(char)*2);
+                ptr_bstr->ptr_char_array =
+                 change_dynamic_memory(ptr_bstr->ptr_char_array,sizeof(char)*2);
                 /* when first dereferenced for change_dynamic_memory() below
                  * the array size should be 2, and increased by two at each
                  * iteration of the below while loop. -- fix heap-buffer
                  * overflow.
                  */
-                *array_size += 2;
+                *(ptr_bstr->ptr_array_size) += 2;
                 break;
         }
 
@@ -442,7 +445,7 @@ char * read_from_file(char *filename, unsigned int *array_size, int mode)
             switch (mode) {
                 /* mode 1: we simply store the character in buffer. */
                 case 1:
-                    ptr_char_array[i] = (char)c;
+                    ptr_bstr->ptr_char_array[i] = (char)c;
                     /* perform small 1-byte allocations until we reach
                      * MIN_ITER_TIL_LCHUNK.
                      */
@@ -450,9 +453,10 @@ char * read_from_file(char *filename, unsigned int *array_size, int mode)
                         /* the array size will be the number of characters + one
                         * after we reach EOF character in input.
                         */
-                        ptr_char_array = change_dynamic_memory(ptr_char_array,
-                                                               sizeof(char) *
-                                                               (*array_size+=1));
+                        ptr_bstr->ptr_char_array =
+                         change_dynamic_memory(ptr_bstr->ptr_char_array,
+                                               sizeof(char) *
+                                               (*(ptr_bstr->ptr_array_size)+=1));
                     /* perform larger memory allocations in increments of 8
                      * bytes.
                      */
@@ -462,17 +466,17 @@ char * read_from_file(char *filename, unsigned int *array_size, int mode)
                          * library calls to realloc().
                          */
                         if (i % as == 0) {
-                            ptr_char_array =
+                            ptr_bstr->ptr_char_array =
                              /* realloc by a factor of 8 + 1 character to
                               * accodomate the next character in the next
                               * iteration.
                               */
-                             change_dynamic_memory(ptr_char_array,
+                             change_dynamic_memory(ptr_bstr->ptr_char_array,
                                                    sizeof(char) *
                                                    (as+=(i/8)*8)+1);
                         }
                         /* update the array size */
-                        *array_size += 1;
+                        *(ptr_bstr->ptr_array_size) += 1;
                     }
                     i++;
                     break;
@@ -482,28 +486,35 @@ char * read_from_file(char *filename, unsigned int *array_size, int mode)
                  */
                 case 2:
                     snprintf(xc, 3, "%02x", c);
-                    ptr_char_array[i] = (char)xc[0];
-                    ptr_char_array[i+1] = (char)xc[1];
+                    ptr_bstr->ptr_char_array[i] = (char)xc[0];
+                    ptr_bstr->ptr_char_array[i+1] = (char)xc[1];
                     /* heap memory allocation */
                     if (i < MIN_ITER_TIL_LCHUNK) {
-                        ptr_char_array = change_dynamic_memory(ptr_char_array,
-                                                               sizeof(char) *
-                                                               (*array_size+=2));
+                        ptr_bstr->ptr_char_array =
+                         change_dynamic_memory(ptr_bstr->ptr_char_array,
+                                               sizeof(char) *
+                                               (*(ptr_bstr->ptr_array_size)+=2));
                     } else {
                         if (i % as == 0) {
                             /* perform reallocation by a factor of 8 + 2
                              * characters to accodomate them at the next
                              * iteration.
                              */
-                            ptr_char_array = change_dynamic_memory(ptr_char_array,
-								   sizeof(char) *
-								   (as+=(i/8)*8)*2+2);
+                            ptr_bstr->ptr_char_array =
+                             change_dynamic_memory(ptr_bstr->ptr_char_array,
+                                                   sizeof(char) *
+                                                   (as+=(i/8)*8)*2+2);
                         }
 			/* update the array size */
-			*array_size += 2;
+			*(ptr_bstr->ptr_array_size) += 2;
                     }
                     i+=2;
                     break;
+            }
+            /* unsigned integer overflow check for 'as' */
+            if (UINT_MAX - ((i/8)*8) < as) {
+                printf("Error: integer overflow condition detected.\n");
+                exit(EXIT_FAILURE);
             }
         }
     /* otherwise: we read from file and output to stdout directly */
@@ -520,15 +531,12 @@ char * read_from_file(char *filename, unsigned int *array_size, int mode)
     /* adjust array size according to the read mode */
     switch (mode) {
         case 1:
-            (*array_size-=1);
+            (*ptr_bstr->ptr_array_size-=1);
             break;
         case 2:
-            (*array_size-=2);
+            (*ptr_bstr->ptr_array_size-=2);
             break;
     }
-
-    /* return pointer to 'ptr_char_array' */
-    return ptr_char_array;
 }
 
 int main(int argc, char *argv[])
@@ -560,6 +568,9 @@ int main(int argc, char *argv[])
 
     /* initialize pointer 'ptr_array_size' in struct pointed by 'ptr_bstr' */
     ptr_bstr->ptr_array_size = allocate_dynamic_memory(sizeof(int));
+
+    /* initialize 'ptr_var_name' in struct as pointed by 'ptr_bstr' to NULL */
+    ptr_bstr->ptr_var_name = NULL;
 
     /* initialize 'indent_width' in struct pointed by 'ptr_bstr' */
     ptr_bstr->indent_width = 0;
@@ -660,6 +671,7 @@ int main(int argc, char *argv[])
                 break;
             case 'n':   /* variable name option given */
                 if (optarg != NULL) {
+                    /* don't forget to free the allocation later */
                     ptr_bstr->ptr_var_name =
                      allocate_dynamic_memory(MAX_ARGUMENT_LENGTH);
                     snprintf(ptr_bstr->ptr_var_name, MAX_ARGUMENT_LENGTH,
@@ -712,15 +724,11 @@ int main(int argc, char *argv[])
         /* if -D|--dump-file option is additionally given */
         if (doHexDumpFile == true) {
             /* call to read_from_file() */
-            ptr_bstr->ptr_char_array = read_from_file(fread_filename,
-                                                      ptr_bstr->ptr_array_size,
-                                                      2);
+            read_from_file(fread_filename, ptr_bstr, 2);
         /* if -f|--file option is given read from file instead of stdin */
         } else if (doReadFromFile == true) {
             /* call to read_from_file() */
-            ptr_bstr->ptr_char_array = read_from_file(fread_filename,
-                                                      ptr_bstr->ptr_array_size,
-                                                      1);
+            read_from_file(fread_filename, ptr_bstr, 1);
         } else {
             /* call to read_and_store_char_input() */
             ptr_bstr->ptr_char_array =
@@ -732,6 +740,9 @@ int main(int argc, char *argv[])
         free(ptr_bstr->ptr_char_array);
         /* call to free() for 'ptr_array_size' */
         free(ptr_bstr->ptr_array_size);
+        /* free memory for ptr_bstr->ptr_var_name if not null */
+        if (ptr_bstr->ptr_var_name != NULL)
+            free(ptr_bstr->ptr_var_name);
         /* call to free() for 'ptr_bstr' */
         free(ptr_bstr);
         /* exit as we're the last action */
@@ -759,12 +770,19 @@ int main(int argc, char *argv[])
             }
         }
         /* call to generate_badchar_sequence() */
-        ptr_bstr->ptr_char_array = generate_badchar_sequence();
+        ptr_bstr->ptr_char_array =
+         generate_badchar_sequence(ptr_bstr->ptr_char_array);;
         /* call to output_hex_escaped_string() */
         output_hex_escaped_string(ptr_bstr);
         /* calls to free() for the various allocated memory locations */
         free(ptr_bstr->ptr_char_array);
         free(ptr_bstr->ptr_array_size);
+        /* free memory for 'var_name' as pointed by 'ptr_bstr->ptr_var_name'
+         * if the later pointer is not null.
+         */
+        if (ptr_bstr->ptr_var_name != NULL)
+            free(ptr_bstr->ptr_var_name);
+        /* free allocation for struct pointed by ptr_bstr */
         free(ptr_bstr);
         /* exit as we're the last action */
         exit(EXIT_SUCCESS);

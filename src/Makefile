@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-O0 -Wall -Wextra -Wformat -Wformat-security -fPIE -fstack-protector-all -D_FORTIFY_SOURCE=2
+CFLAGS=-O1 -Wall -Wextra -Wformat -Wformat-security -fPIE -fstack-protector-all -D_FORTIFY_SOURCE=2
 LDFLAGS=
 GIT=/usr/bin/git
 
