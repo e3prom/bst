@@ -1,4 +1,4 @@
-/* vi:set tw=78 ts=8 sw=4 sts=4 et:
+/* vi:set tw=80 ts=8 sw=4 sts=4 et:
  *
  * Binary String Toolkit
  *
@@ -260,7 +260,7 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
 
     /* we've reached the end of the binary string output. */
     switch (ptr_bstr->output_lang) {
-        case 1: putchar('\"'); break;
+        case 1: putchar('\"'); putchar(59); break;
         case 2: putchar('\"'); break;
     }
     putchar('\n');
@@ -271,7 +271,7 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
     }
 }
 
-void * allocate_dynamic_memory(unsigned int alloc_size)
+void * alloc_heap_memory(unsigned int alloc_size)
 {
     /* use malloc() to allocate dynamic memory and then return to the caller
      * function the memory location allocated on the heap.
@@ -288,7 +288,7 @@ void * allocate_dynamic_memory(unsigned int alloc_size)
     return ptr;
 }
 
-void * change_dynamic_memory(char *ptr, unsigned int new_size)
+void * realloc_heap_memory(char *ptr, unsigned int new_size)
 {
     /* call to realloc() to change the size of the memory block pointed to by
      * the pointer 'new_ptr' with the new size value in 'new_size'.
@@ -311,11 +311,11 @@ char * generate_badchar_sequence(char *ptr_badchar_array)
     int i;
 
     /* initialize bad char. character array pointer by calling
-     * allocate_dynamic_memory() function with a fixed allocation size of 510
+     * alloc_heap_memory() function with a fixed allocation size of 510
      * bytes, the latter being the length we need to hold all hex digits.
     */
-    ptr_badchar_array = change_dynamic_memory(ptr_badchar_array, sizeof(char)
-                                              * BADCHAR_HEX_SEQLEN);
+    ptr_badchar_array = realloc_heap_memory(ptr_badchar_array, sizeof(char)
+                                            * BADCHAR_HEX_SEQLEN);
 
     /* initialize length integer */
     unsigned int length = 0;
@@ -339,8 +339,8 @@ char * read_and_store_char_input(unsigned int *array_size)
     /* initialize unsigned integer 'i' which will be used as an array index. */
     unsigned int i = 0;
     /* initialize unsigned integer 'as' which holds the memory allocation
-     * size. Here the value must equals one character due to the memory allocation
-     * being done after character write. */
+     * size. Here the value must equals one character due to the memory
+     * allocation being done after character write. */
     unsigned int as = sizeof(char);
 
     /* if in interactive mode */
@@ -348,9 +348,9 @@ char * read_and_store_char_input(unsigned int *array_size)
         printf("[+] Hit CTRL-D twice to terminate input.\n");
 
     /* initialize character array pointer 'ptr_char_array' by calling
-     * allocate_dynamic_memory() function.
+     * alloc_heap_memory() function.
      */
-    char *ptr_char_array = allocate_dynamic_memory(sizeof(char));
+    char *ptr_char_array = alloc_heap_memory(sizeof(char));
 
     /* increase array_size to account for the first character. */
     *array_size += 1;
@@ -362,9 +362,8 @@ char * read_and_store_char_input(unsigned int *array_size)
         ptr_char_array[i] = (char)c;
         /* perform small allocations until MIN_ITER_TIL_LCHUNK */
         if (i < MIN_ITER_TIL_LCHUNK) {
-            ptr_char_array = change_dynamic_memory(ptr_char_array,
-                                                   sizeof(char) *
-                                                   (*array_size+=1));
+            ptr_char_array = realloc_heap_memory(ptr_char_array, sizeof(char)
+                                                 * (*array_size+=1));
         /* perform larger memory allocations in increments of 8 bytes. */
         } else {
             /* when the index is divisible by the allocation size, perform a
@@ -372,9 +371,9 @@ char * read_and_store_char_input(unsigned int *array_size)
              * library calls to realloc().
              */
             if (i % as == 0) {
-                ptr_char_array = change_dynamic_memory(ptr_char_array,
-                                                       sizeof(char) *
-                                                       (as+=(i/8)*8)+1);
+                ptr_char_array = realloc_heap_memory(ptr_char_array,
+                                                     sizeof(char) *
+                                                     (as+=(i/8)*8)+1);
             }
 	    /* update the array size */
             *array_size += 1;
@@ -382,7 +381,7 @@ char * read_and_store_char_input(unsigned int *array_size)
 
         /* unsigned integer overflow check for 'as'*/
         if (UINT_MAX - ((i/8)*8) < as) {
-            printf("Error: integer overflow condition detected.\n");
+            printf("Error: unsigned integer overflow detected.\n");
             exit(EXIT_FAILURE);
         }
 
@@ -431,8 +430,8 @@ void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
                 break;
             case 2:
                 ptr_bstr->ptr_char_array =
-                 change_dynamic_memory(ptr_bstr->ptr_char_array,sizeof(char)*2);
-                /* when first dereferenced for change_dynamic_memory() below
+                 realloc_heap_memory(ptr_bstr->ptr_char_array,sizeof(char)*2);
+                /* when first dereferenced for realloc_heap_memory() below
                  * the array size should be 2, and increased by two at each
                  * iteration of the below while loop. -- fix heap-buffer
                  * overflow.
@@ -450,20 +449,20 @@ void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
                      * MIN_ITER_TIL_LCHUNK.
                      */
                     if (i < MIN_ITER_TIL_LCHUNK) {
-                        /* the array size will be the number of characters + one
-                        * after we reach EOF character in input.
-                        */
+                        /* the array size will be the number of characters +
+                         * one after we reach EOF character in input.
+                         */
                         ptr_bstr->ptr_char_array =
-                         change_dynamic_memory(ptr_bstr->ptr_char_array,
-                                               sizeof(char) *
-                                               (*(ptr_bstr->ptr_array_size)+=1));
+                         realloc_heap_memory(ptr_bstr->ptr_char_array,
+                                             sizeof(char) *
+                                             (*(ptr_bstr->ptr_array_size)+=1));
                     /* perform larger memory allocations in increments of 8
                      * bytes.
                      */
                     } else {
-                        /* when the index is divisible by the allocation size, perform a
-                         * new, larger memory allocation. This should reduce the number of
-                         * library calls to realloc().
+                        /* when the index is divisible by the allocation size,
+                         * perform a new, larger memory allocation. This should
+                         * reduce the number of library calls to realloc().
                          */
                         if (i % as == 0) {
                             ptr_bstr->ptr_char_array =
@@ -471,9 +470,9 @@ void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
                               * accodomate the next character in the next
                               * iteration.
                               */
-                             change_dynamic_memory(ptr_bstr->ptr_char_array,
-                                                   sizeof(char) *
-                                                   (as+=(i/8)*8)+1);
+                             realloc_heap_memory(ptr_bstr->ptr_char_array,
+                                                 sizeof(char) *
+                                                 (as+=(i/8)*8)+1);
                         }
                         /* update the array size */
                         *(ptr_bstr->ptr_array_size) += 1;
@@ -491,9 +490,9 @@ void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
                     /* heap memory allocation */
                     if (i < MIN_ITER_TIL_LCHUNK) {
                         ptr_bstr->ptr_char_array =
-                         change_dynamic_memory(ptr_bstr->ptr_char_array,
-                                               sizeof(char) *
-                                               (*(ptr_bstr->ptr_array_size)+=2));
+                         realloc_heap_memory(ptr_bstr->ptr_char_array,
+                                             sizeof(char) *
+                                             (*(ptr_bstr->ptr_array_size)+=2));
                     } else {
                         if (i % as == 0) {
                             /* perform reallocation by a factor of 8 + 2
@@ -501,9 +500,9 @@ void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
                              * iteration.
                              */
                             ptr_bstr->ptr_char_array =
-                             change_dynamic_memory(ptr_bstr->ptr_char_array,
-                                                   sizeof(char) *
-                                                   (as+=(i/8)*8)*2+2);
+                             realloc_heap_memory(ptr_bstr->ptr_char_array,
+                                                 sizeof(char) *
+                                                 (as+=(i/8)*8)*2+2);
                         }
 			/* update the array size */
 			*(ptr_bstr->ptr_array_size) += 2;
@@ -513,7 +512,7 @@ void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
             }
             /* unsigned integer overflow check for 'as' */
             if (UINT_MAX - ((i/8)*8) < as) {
-                printf("Error: integer overflow condition detected.\n");
+                printf("Error: unsigned integer overflow detected.\n");
                 exit(EXIT_FAILURE);
             }
         }
@@ -561,13 +560,13 @@ int main(int argc, char *argv[])
     /* initialize pointer 'ptr_bstr' for struct type 'bstring'.
        the struct is allocated and stored on the heap.
      */
-    struct bstring *ptr_bstr = allocate_dynamic_memory(sizeof *ptr_bstr);
+    struct bstring *ptr_bstr = alloc_heap_memory(sizeof *ptr_bstr);
 
     /* initialize pointer 'ptr_char_array' in struct pointed by 'ptr_bstr' */
-    ptr_bstr->ptr_char_array = allocate_dynamic_memory(sizeof(char));
+    ptr_bstr->ptr_char_array = alloc_heap_memory(sizeof(char));
 
     /* initialize pointer 'ptr_array_size' in struct pointed by 'ptr_bstr' */
-    ptr_bstr->ptr_array_size = allocate_dynamic_memory(sizeof(int));
+    ptr_bstr->ptr_array_size = alloc_heap_memory(sizeof(int));
 
     /* initialize 'ptr_var_name' in struct as pointed by 'ptr_bstr' to NULL */
     ptr_bstr->ptr_var_name = NULL;
@@ -673,7 +672,7 @@ int main(int argc, char *argv[])
                 if (optarg != NULL) {
                     /* don't forget to free the allocation later */
                     ptr_bstr->ptr_var_name =
-                     allocate_dynamic_memory(MAX_ARGUMENT_LENGTH);
+                     alloc_heap_memory(MAX_ARGUMENT_LENGTH);
                     snprintf(ptr_bstr->ptr_var_name, MAX_ARGUMENT_LENGTH,
                              "%s", optarg);
                 }
