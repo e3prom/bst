@@ -332,7 +332,7 @@ char * generate_badchar_sequence(char *ptr_badchar_array)
     return ptr_badchar_array;
 }
 
-char * read_and_store_char_input(unsigned int *array_size)
+void read_and_store_char_input(struct bstring *ptr_bstr)
 {
     /* declare integer 'c' which will hold input character. */
     int c;
@@ -350,20 +350,21 @@ char * read_and_store_char_input(unsigned int *array_size)
     /* initialize character array pointer 'ptr_char_array' by calling
      * alloc_heap_memory() function.
      */
-    char *ptr_char_array = alloc_heap_memory(sizeof(char));
+    //char *ptr_char_array = alloc_heap_memory(sizeof(char));
 
     /* increase array_size to account for the first character. */
-    *array_size += 1;
+    (*ptr_bstr->ptr_array_size += 1);
 
     /* store each input character into the character array 'ptr_char_array'
      * until we reach EOF.
      */
     while ((c = getchar()) != EOF) {
-        ptr_char_array[i] = (char)c;
+        ptr_bstr->ptr_char_array[i] = (char)c;
         /* perform small allocations until MIN_ITER_TIL_LCHUNK */
         if (i < MIN_ITER_TIL_LCHUNK) {
-            ptr_char_array = realloc_heap_memory(ptr_char_array, sizeof(char)
-                                                 * (*array_size+=1));
+            ptr_bstr->ptr_char_array =
+             realloc_heap_memory(ptr_bstr->ptr_char_array, sizeof(char)
+                                 * (*ptr_bstr->ptr_array_size+=1));
         /* perform larger memory allocations in increments of 8 bytes. */
         } else {
             /* when the index is divisible by the allocation size, perform a
@@ -371,12 +372,12 @@ char * read_and_store_char_input(unsigned int *array_size)
              * library calls to realloc().
              */
             if (i % as == 0) {
-                ptr_char_array = realloc_heap_memory(ptr_char_array,
-                                                     sizeof(char) *
-                                                     (as+=(i/8)*8)+1);
+                ptr_bstr->ptr_char_array =
+                 realloc_heap_memory(ptr_bstr->ptr_char_array, sizeof(char)
+                                     * (as+=(i/8)*8)+1);
             }
 	    /* update the array size */
-            *array_size += 1;
+            (*ptr_bstr->ptr_array_size += 1);
         }
 
         /* unsigned integer overflow check for 'as'*/
@@ -388,9 +389,6 @@ char * read_and_store_char_input(unsigned int *array_size)
 	/* increment the array index */
         i++;
     }
-
-    /* return a pointer to caller function */
-    return ptr_char_array;
 }
 
 void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
@@ -730,8 +728,7 @@ int main(int argc, char *argv[])
             read_from_file(fread_filename, ptr_bstr, 1);
         } else {
             /* call to read_and_store_char_input() */
-            ptr_bstr->ptr_char_array =
-                read_and_store_char_input(ptr_bstr->ptr_array_size);
+            read_and_store_char_input(ptr_bstr);
         }
         /* call to output_hex_escaped_string() */
         output_hex_escaped_string(ptr_bstr);
