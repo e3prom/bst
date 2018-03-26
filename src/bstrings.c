@@ -347,11 +347,6 @@ void read_and_store_char_input(struct bstring *ptr_bstr)
     if (interactive_flag)
         printf("[+] Hit CTRL-D twice to terminate input.\n");
 
-    /* initialize character array pointer 'ptr_char_array' by calling
-     * alloc_heap_memory() function.
-     */
-    //char *ptr_char_array = alloc_heap_memory(sizeof(char));
-
     /* increase array_size to account for the first character. */
     (*ptr_bstr->ptr_array_size += 1);
 
