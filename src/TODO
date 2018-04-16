@@ -1,0 +1,10 @@
+* --hex-uppercase switch to output all upper-case hexadecimal binary string.
+OK binary string decorations
+OK limit row width for -D alone
+OK indentation and variable name support.
+- fix syntax support/decoration for bad characters sequence.
+- limit size of indentation.
+- report input/ouput length in bytes.
+- remove characters from bad characters sequence.
+- accept output from debugger to find bad characters.
+- unicode and base64 binary strings support.

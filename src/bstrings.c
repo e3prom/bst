@@ -276,7 +276,7 @@ void * alloc_heap_memory(unsigned int alloc_size)
     /* use malloc() to allocate dynamic memory and then return to the caller
      * function the memory location allocated on the heap.
      */
-    char *ptr = malloc(alloc_size);
+    void *ptr = malloc(alloc_size);
 
     /* error handling: on errors malloc() returns NULL. */
     if (ptr == NULL) {
@@ -288,12 +288,12 @@ void * alloc_heap_memory(unsigned int alloc_size)
     return ptr;
 }
 
-void * realloc_heap_memory(char *ptr, unsigned int new_size)
+void * realloc_heap_memory(void *ptr, unsigned int new_size)
 {
     /* call to realloc() to change the size of the memory block pointed to by
      * the pointer 'new_ptr' with the new size value in 'new_size'.
      */
-    char *new_ptr = realloc(ptr, new_size);
+    void *new_ptr = realloc(ptr, new_size);
 
     /* error handling: on errors realloc() returns NULL. */
     if (new_ptr == NULL) {
@@ -314,8 +314,9 @@ char * generate_badchar_sequence(char *ptr_badchar_array)
      * alloc_heap_memory() function with a fixed allocation size of 510
      * bytes, the latter being the length we need to hold all hex digits.
     */
-    ptr_badchar_array = realloc_heap_memory(ptr_badchar_array, sizeof(char)
-                                            * BADCHAR_HEX_SEQLEN);
+    ptr_badchar_array = (char *)realloc_heap_memory(ptr_badchar_array,
+                                                    sizeof(char)
+                                                    * BADCHAR_HEX_SEQLEN);
 
     /* initialize length integer */
     unsigned int length = 0;
@@ -358,8 +359,9 @@ void read_and_store_char_input(struct bstring *ptr_bstr)
         /* perform small allocations until MIN_ITER_TIL_LCHUNK */
         if (i < MIN_ITER_TIL_LCHUNK) {
             ptr_bstr->ptr_char_array =
-             realloc_heap_memory(ptr_bstr->ptr_char_array, sizeof(char)
-                                 * (*ptr_bstr->ptr_array_size+=1));
+             (char *)realloc_heap_memory(ptr_bstr->ptr_char_array,
+                                         sizeof(char) *
+                                         (*ptr_bstr->ptr_array_size+=1));
         /* perform larger memory allocations in increments of 8 bytes. */
         } else {
             /* when the index is divisible by the allocation size, perform a
@@ -368,8 +370,9 @@ void read_and_store_char_input(struct bstring *ptr_bstr)
              */
             if (i % as == 0) {
                 ptr_bstr->ptr_char_array =
-                 realloc_heap_memory(ptr_bstr->ptr_char_array, sizeof(char)
-                                     * (as+=(i/8)*8)+1);
+                 (char *)realloc_heap_memory(ptr_bstr->ptr_char_array,
+                                             sizeof(char) *
+                                             (as+=(i/8)*8)+1);
             }
 	    /* update the array size */
             (*ptr_bstr->ptr_array_size += 1);
@@ -423,7 +426,8 @@ void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
                 break;
             case 2:
                 ptr_bstr->ptr_char_array =
-                 realloc_heap_memory(ptr_bstr->ptr_char_array,sizeof(char)*2);
+                 (char *)realloc_heap_memory(ptr_bstr->ptr_char_array,
+                                             sizeof(char)*2);
                 /* when first dereferenced for realloc_heap_memory() below
                  * the array size should be 2, and increased by two at each
                  * iteration of the below while loop. -- fix heap-buffer
@@ -446,9 +450,10 @@ void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
                          * one after we reach EOF character in input.
                          */
                         ptr_bstr->ptr_char_array =
-                         realloc_heap_memory(ptr_bstr->ptr_char_array,
-                                             sizeof(char) *
-                                             (*(ptr_bstr->ptr_array_size)+=1));
+                         (char *)realloc_heap_memory(ptr_bstr->ptr_char_array,
+                                                     sizeof(char) * (
+                                                     *(ptr_bstr->ptr_array_size)
+                                                     +=1));
                     /* perform larger memory allocations in increments of 8
                      * bytes.
                      */
@@ -458,14 +463,14 @@ void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
                          * reduce the number of library calls to realloc().
                          */
                         if (i % as == 0) {
+                            /* realloc by a factor of 8 + 1 character to
+                             * accodomate the next character in the next
+                             * iteration.
+                             */
                             ptr_bstr->ptr_char_array =
-                             /* realloc by a factor of 8 + 1 character to
-                              * accodomate the next character in the next
-                              * iteration.
-                              */
-                             realloc_heap_memory(ptr_bstr->ptr_char_array,
-                                                 sizeof(char) *
-                                                 (as+=(i/8)*8)+1);
+                             (char *)realloc_heap_memory(ptr_bstr->ptr_char_array,
+                                                         sizeof(char) *
+                                                         (as+=(i/8)*8)+1);
                         }
                         /* update the array size */
                         *(ptr_bstr->ptr_array_size) += 1;
@@ -483,9 +488,10 @@ void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
                     /* heap memory allocation */
                     if (i < MIN_ITER_TIL_LCHUNK) {
                         ptr_bstr->ptr_char_array =
-                         realloc_heap_memory(ptr_bstr->ptr_char_array,
-                                             sizeof(char) *
-                                             (*(ptr_bstr->ptr_array_size)+=2));
+                         (char *)realloc_heap_memory(ptr_bstr->ptr_char_array,
+                                                     sizeof(char) * (
+                                                     *(ptr_bstr->ptr_array_size)
+                                                     +=2));
                     } else {
                         if (i % as == 0) {
                             /* perform reallocation by a factor of 8 + 2
@@ -493,9 +499,9 @@ void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
                              * iteration.
                              */
                             ptr_bstr->ptr_char_array =
-                             realloc_heap_memory(ptr_bstr->ptr_char_array,
-                                                 sizeof(char) *
-                                                 (as+=(i/8)*8)*2+2);
+                             (char *)realloc_heap_memory(ptr_bstr->ptr_char_array,
+                                                         sizeof(char) *
+                                                         (as+=(i/8)*8)*2+2);
                         }
 			/* update the array size */
 			*(ptr_bstr->ptr_array_size) += 2;
@@ -553,13 +559,15 @@ int main(int argc, char *argv[])
     /* initialize pointer 'ptr_bstr' for struct type 'bstring'.
        the struct is allocated and stored on the heap.
      */
-    struct bstring *ptr_bstr = alloc_heap_memory(sizeof *ptr_bstr);
+    struct bstring *ptr_bstr = (struct bstring *)
+                                alloc_heap_memory(sizeof *ptr_bstr);
 
     /* initialize pointer 'ptr_char_array' in struct pointed by 'ptr_bstr' */
-    ptr_bstr->ptr_char_array = alloc_heap_memory(sizeof(char));
+    ptr_bstr->ptr_char_array = (char *)alloc_heap_memory(sizeof(char));
 
     /* initialize pointer 'ptr_array_size' in struct pointed by 'ptr_bstr' */
-    ptr_bstr->ptr_array_size = alloc_heap_memory(sizeof(int));
+    ptr_bstr->ptr_array_size = (unsigned int *)
+                                alloc_heap_memory(sizeof(unsigned int));
 
     /* initialize 'ptr_var_name' in struct as pointed by 'ptr_bstr' to NULL */
     ptr_bstr->ptr_var_name = NULL;
@@ -665,7 +673,7 @@ int main(int argc, char *argv[])
                 if (optarg != NULL) {
                     /* don't forget to free the allocation later */
                     ptr_bstr->ptr_var_name =
-                     alloc_heap_memory(MAX_ARGUMENT_LENGTH);
+                     (char *)alloc_heap_memory(MAX_ARGUMENT_LENGTH);
                     snprintf(ptr_bstr->ptr_var_name, MAX_ARGUMENT_LENGTH,
                              "%s", optarg);
                 }
