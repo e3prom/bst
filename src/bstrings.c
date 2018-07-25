@@ -44,24 +44,24 @@ static void print_usage(FILE *stream, char *program_name)
     fprintf(stream, "Usage: %s [OPTION]...\n", program_name);
     fprintf(stream, " Convert input to specified binary string format.\n\n");
     fprintf(stream, " At least one of the below options must be given:\n\
-    -D, --dump-file=FILE    Dump content of file FILE in hexadecimal format\n\
+    -D, --dump-file=FILE    Convert and Dump RAW content of file FILE\n\
     -x, --hex-escape        Escape input hexadecimal string\n\
     -b, --gen-badchar       Generate a bad character sequence string\n\
     \n");
     fprintf(stream, " The below switches are optional:\n\
-    -f, --file=FILE         Read input from file FILE instead of stdin\n\
+    -f, --file=FILE         Read hex input from file FILE instead of stdin\n\
     -w, --width=BYTES       Break binary strings to specified length in bytes\n\
-    -s, --syntax=LANG       Output variable using language syntax of LANG\n\
+    -s, --syntax=LANG       Output variable using syntax of LANG\n\
     -i, --indent=LENGTH     Perform indentation for given character length\n\
-    -n, --var-name=VAR      Specify binary string variable name (verbose)\n\
+    -n, --var-name=VAR      Specify string variable name (verbose mode)\n\
     -h, --help              Display this help\n\
        --interactive        Enter interactive mode\n\
        --verbose            Enable verbose output\n\
        --version            Print version information\n\
     \n");
     fprintf(stream, " The below languages are supported (case-sensitive):\n\
-    C                       C Programming language\n\
-    python                  Python Programming language\n\
+    C                       C Programming Language\n\
+    python                  Python Programming Language\n\
     powershell              PowerShell Automation and Scripting Language\n\
     \n");
 }
