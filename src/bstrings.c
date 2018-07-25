@@ -445,10 +445,10 @@ void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
         char xc[3];
 
         switch (mode) {
-            case 1:
+            case 1:     /* Direct read mode */
                 *(ptr_bstr->ptr_array_size) += 1;
                 break;
-            case 2:
+            case 2:     /* Convert and dump mode */
                 ptr_bstr->ptr_char_array =
                  (char *)realloc_heap_memory(ptr_bstr->ptr_char_array,
                                              sizeof(char)*2);
@@ -465,6 +465,8 @@ void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
             switch (mode) {
                 /* mode 1: we simply store the character in buffer. */
                 case 1:
+                    /* if newline character (0x0a), then simply ignore it */
+                    if (c == 10) break;
                     ptr_bstr->ptr_char_array[i] = (char)c;
                     /* perform small 1-byte allocations until we reach
                      * MIN_ITER_TIL_LCHUNK.
