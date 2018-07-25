@@ -1,16 +1,20 @@
 # Binary String Toolkit
 ## Summary
 The Binary String Toolkit or BST for short is a rather simple utility to
-convert binary strings to various formats suitable for later inclusions in
-source codes, such as those used to develop exploits in the security field.
+convert binary strings to various formats suitable for inclusions in source
+codes, such as those used to develop exploits and Proof of Concepts in the
+security field.
 
 ## Features
- * Dump files content to standard output in a binary string format.
- * Convert a plain hexadecimal input to an escaped binary string.
- * Output a sequence of bad characters for testing proof of concept code.
- * Limit the width of binary strings for better readability in source codes.
- * Format output in your favorite programming language's syntax.
- * Perform binary variable block indentation.
+ * Convert and dump binary files to standard output in a binary string format.
+ * Convert a plain hexadecimal input string to an hex escaped version.
+ * Generate a sequence of bad characters for detecting bad chars in buffers.
+ * Limit the width of binary strings for a better readability of your exploit codes.
+ * Format binary strings in your favorite programming or scripting language's syntax, such as:
+   * C/C++
+   * Python
+   * PowerShell
+ * Perform automatic variable block indentation ready for copy/paste inclusions.
 
 ## Dependencies
  * POSIX C Library
@@ -21,20 +25,20 @@ source codes, such as those used to develop exploits in the security field.
  * Git
 
 ## Building
-To build and install the 'bstrings' binary, simply do:
+To build and install the 'bstrings' binary on your system, simply do:
 ```
 $ git clone https://github.com/e3prom/bst
 $ cd bst
 $ make
 # by default, bstrings is installed in /usr/local/bin.
-$ make install
+$ sudo make install
 ```
 
 ## Usage
 The below example show how an assembled shellcode can be quickly dumped (-D)
 to standard output in a hexadecimal escaped (-x) binary string of 16 hexadecimal
-digits width (or 8 bytes), with Python syntax formatting and an indentation of
-4 space characters:
+digits width (or 8 bytes), with Python syntax formatting and an indentation level
+of 4 space characters:
 ```
 $ bstrings --verbose -x -D lnx-execve-setreuid-x86_64 -w8 -i 4 --syntax=python
 [*] Convert hexadecimal input to an escaped binary string.
@@ -81,37 +85,37 @@ $ bstrings --verbose -b -w12 -i 4 --syntax=c -n badchar
         "\xfd\xfe\xff"
 ```
 
-For a list of supported command-line options, simply execute bstrings with the '--help' switch:
+For a list of supported command-line options, simply execute bstrings with the ```--help``` switch:
 ```
 $ bstrings --help
-Usage: ./bstrings [OPTION]...
+Usage: bstrings [OPTION]...
  Convert input to specified binary string format.
 
  At least one of the below options must be given:
-    -D, --dump-file=FILE    Dump content of file FILE in hexadecimal format
+    -D, --dump-file=FILE    Convert and Dump RAW content of file FILE
     -x, --hex-escape        Escape input hexadecimal string
     -b, --gen-badchar       Generate a bad character sequence string
-
+ 
  The below switches are optional:
-    -f, --file=FILE         Read input from file FILE instead of stdin
+    -f, --file=FILE         Read hex input from file FILE instead of stdin
     -w, --width=BYTES       Break binary strings to specified length in bytes
-    -s, --syntax=LANG       Output variable using language syntax of LANG
+    -s, --syntax=LANG       Output variable using syntax of LANG
     -i, --indent=LENGTH     Perform indentation for given character length
-    -n, --var-name=VAR      Specify binary string variable name (verbose)
+    -n, --var-name=VAR      Specify string variable name (verbose mode)
     -h, --help              Display this help
        --interactive        Enter interactive mode
        --verbose            Enable verbose output
        --version            Print version information
 
  The below languages are supported (case-sensitive):
-    C                       C Programming language
-    python                  Python Programming language
+    C                       C Programming Language
+    python                  Python Programming Language
+    powershell              PowerShell Automation and Scripting Language
 
 ```
 
 ## Contribution
-Feel free to contribute to this project by submitting your codes and by reporting
-issues or bugs.
+Feel free to contribute to this project by submitting your codes and by reporting issues and bugs
 
 ## Software License
 This software is licensed under the terms of the GNU General Public License.
