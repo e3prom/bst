@@ -62,6 +62,7 @@ static void print_usage(FILE *stream, char *program_name)
     fprintf(stream, " The below languages are supported (case-sensitive):\n\
     C                       C Programming language\n\
     python                  Python Programming language\n\
+    powershell              PowerShell Automation and Scripting Language\n\
     \n");
 }
 
@@ -138,18 +139,25 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
         }
         /* print variable name matching specified language */
         switch (ptr_bstr->output_lang) {
-            case 1:
+            case 1:     /* C */
                 if (ptr_bstr->ptr_var_name != NULL)
                     printf("unsigned char %s[] =\n", ptr_bstr->ptr_var_name);
                 else
                     printf("unsigned char buffer[] =\n");
                 break;
-            case 2:
+            case 2:     /* Python */
                 if (ptr_bstr->ptr_var_name != NULL)
                     printf("%s =  \"\"\n", ptr_bstr->ptr_var_name);
                 else
                     printf("buffer =  \"\"\n");
                 break;
+            case 3:     /* PowerShell */
+                if (ptr_bstr->ptr_var_name != NULL)
+                    printf("[Byte[]] $%s = ", ptr_bstr->ptr_var_name);
+                else
+                    printf("[Byte[]] $buf = ");
+                break;
+
         }
     }
 
@@ -173,9 +181,7 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
             case 65 ... 70:         // A-F
             case 97 ... 102:        // a-f
                 /* if the hex escaped char array index is divible by two,
-                 * we've pair of hexadecimal characters (or byte), we need to
-                 * escape using the binary string escape characters '\' and
-                 * 'x' respectively.
+                 * we've pair of hexadecimal characters (or byte)
                  */
                 if (ai % 2 == 0) {
                     /* if string_width is non-default or specified. */
@@ -214,11 +220,13 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
                                     /* if variable name specified */
                                     if (ptr_bstr->ptr_var_name != NULL) {
                                         printf("%s += ",
-                                               ptr_bstr->ptr_var_name);
+                                         ptr_bstr->ptr_var_name);
                                     } else {
                                         printf("buffer += ");
                                     }
                                     putchar('\"');
+                                    break;
+                                case 3:     /* PowerShell */
                                     break;
                                 default:
                                     if (ai != 0) {
@@ -232,11 +240,27 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
                            }
                         }
                     }
-                    putchar('\\');
-                    putchar('x');
-                    putchar(c);
+                    switch (ptr_bstr->output_lang) {
+                        case 3: /* PowerShell */
+                            /* 0xH format */
+                            putchar('0'); putchar('x'); putchar(c);
+                            break;
+                        default:
+                            /* \xH format */
+                            putchar('\\'); putchar('x'); putchar(c);
+                    }
                 } else {
-                    putchar(c);
+                    switch (ptr_bstr->output_lang) {
+                      case 3: /* PowerShell */
+                          if (ai == (int)(*ptr_bstr->ptr_array_size)-1) {
+                              putchar(c);
+                          } else {
+                              putchar(c); putchar(',');
+                          }
+                          break;
+                      default:
+                          putchar(c);
+                    }
                 }
                 /* Increase the hex escaped character array index so we keep
                  * track of the pair of hexadecimal byte inside the binary
@@ -649,6 +673,8 @@ int main(int argc, char *argv[])
                     ptr_bstr->output_lang=1;
                 } else if (strcmp(arg_lang, "python") == 0) {
                     ptr_bstr->output_lang=2;
+                } else if (strcmp(arg_lang, "powershell") == 0) {
+                    ptr_bstr->output_lang=3;
                 } else {
                     printf("[-] Error: Unknown specified language \"%s\".\n",
                            arg_lang);
