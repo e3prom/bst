@@ -113,6 +113,13 @@ enum enum_read_modes {
   file_raw    /* read raw data from file */
 };
 
+/* enumeration of supported languages */
+enum enum_languages {
+  C = 1,      /* C Programming Language */
+  python,     /* Python Programing Language */
+  powershell  /* Powershell Automation and Scripting Language */
+};
+
 void output_hex_escaped_string(struct bstring *ptr_bstr)
 {
     /* declare integer i, c and ic */
@@ -146,19 +153,19 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
         }
         /* print variable name matching specified language */
         switch (ptr_bstr->output_lang) {
-            case 1:     /* C */
+            case C:           /* C */
                 if (ptr_bstr->ptr_var_name != NULL)
                     printf("unsigned char %s[] =\n", ptr_bstr->ptr_var_name);
                 else
                     printf("unsigned char buffer[] =\n");
                 break;
-            case 2:     /* Python */
+            case python:      /* Python */
                 if (ptr_bstr->ptr_var_name != NULL)
                     printf("%s =  \"\"\n", ptr_bstr->ptr_var_name);
                 else
                     printf("buffer =  \"\"\n");
                 break;
-            case 3:     /* PowerShell */
+            case powershell:  /* PowerShell */
                 if (ptr_bstr->ptr_var_name != NULL)
                     printf("[Byte[]] $%s = ", ptr_bstr->ptr_var_name);
                 else
@@ -201,7 +208,7 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
                          */
                         if (ai % (ptr_bstr->string_width*2) == 0) {
                             switch (ptr_bstr->output_lang) {
-                                case 1:     /* C syntax */
+                                case C:           /* C syntax */
                                     /* ensure we don't put an extra character
                                      * at the start of the binary string row
                                      * by verifying 'ai' is not zero.
@@ -217,7 +224,7 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
                                     }
                                     putchar('\"');
                                     break;
-                                case 2:     /* Python syntax */
+                                case python:      /* Python syntax */
                                     if (ai != 0) { putchar('\"'); }
                                     if (ai != 0) { putchar('\n'); }
                                     /* indentation loop */
@@ -233,22 +240,21 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
                                     }
                                     putchar('\"');
                                     break;
-                                case 3:     /* PowerShell */
+                                case powershell:  /* PowerShell */
                                     break;
                                 default:
                                     if (ai != 0) {
                                         putchar('\n');
                                         /* indentation loop */
-                                        for (ic = 0; ic < indent_width; ic++)
-                                        {
+                                        for (ic = 0; ic < indent_width; ic++) {
                                             putchar(32);
                                         }
                                     }
-                           }
+                            }
                         }
                     }
                     switch (ptr_bstr->output_lang) {
-                        case 3: /* PowerShell */
+                        case powershell:    /* PowerShell */
                             /* 0xH format */
                             putchar('0'); putchar('x'); putchar(c);
                             break;
@@ -258,7 +264,7 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
                     }
                 } else {
                     switch (ptr_bstr->output_lang) {
-                      case 3: /* PowerShell */
+                      case powershell:      /* PowerShell */
                           if (ai == (int)(*ptr_bstr->ptr_array_size)-1) {
                               putchar(c);
                           } else {
@@ -291,8 +297,8 @@ void output_hex_escaped_string(struct bstring *ptr_bstr)
 
     /* we've reached the end of the binary string output. */
     switch (ptr_bstr->output_lang) {
-        case 1: putchar('\"'); putchar(59); break;
-        case 2: putchar('\"'); break;
+        case C: putchar('\"'); putchar(59); break;
+        case python: putchar('\"'); break;
     }
     putchar('\n');
 
@@ -366,8 +372,8 @@ char * generate_badchar_sequence(char *ptr_badchar_array)
 
 void read_and_store_char_input(struct bstring *ptr_bstr)
 {
-    /* declare integer 'c' which will hold input character. */
-    int c;
+    /* initialize integer 'c' which will hold input character. */
+    int c = 0;
     /* initialize unsigned integer 'i' which will be used as an array index. */
     unsigned int i = 0;
     /* initialize unsigned integer 'as' which holds the memory allocation
@@ -422,8 +428,8 @@ void read_and_store_char_input(struct bstring *ptr_bstr)
 
 void read_from_file(char *filename, struct bstring *ptr_bstr, int read_mode)
 {
-    /* declare integer 'c' */
-    int c;
+    /* initialize integer 'c' */
+    int c = 0;
     /* declare pointer to FILE 'ptr_file_descriptor' */
     FILE *ptr_file_descriptor;
 
