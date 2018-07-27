@@ -385,9 +385,6 @@ void read_and_store_char_input(struct bstring *ptr_bstr)
     if (interactive_flag)
         printf("[+] Hit CTRL-D twice to terminate input.\n");
 
-    /* increase array_size to account for the first character. */
-    (*ptr_bstr->ptr_array_size += 1);
-
     /* store each input character into the character array 'ptr_char_array'
      * until we reach EOF.
      */
@@ -411,7 +408,7 @@ void read_and_store_char_input(struct bstring *ptr_bstr)
                                              sizeof(char) *
                                              (as+=(i/8)*8)+1);
             }
-	    /* update the array size */
+            /* update the array size */
             (*ptr_bstr->ptr_array_size += 1);
         }
 
@@ -421,9 +418,12 @@ void read_and_store_char_input(struct bstring *ptr_bstr)
             exit(EXIT_FAILURE);
         }
 
-	/* increment the array index */
+        /* increment the array index */
         i++;
     }
+    /* decrease the array size as it will always be size+1 after the while
+       loop above. */
+    (*ptr_bstr->ptr_array_size -= 1);
 }
 
 void read_from_file(char *filename, struct bstring *ptr_bstr, int read_mode)
@@ -458,10 +458,10 @@ void read_from_file(char *filename, struct bstring *ptr_bstr, int read_mode)
         char xc[3];
 
         switch (read_mode) {
-            case direct:     /* Direct read mode */
+            case file_hex:    /* Read hexadecimal */
                 *(ptr_bstr->ptr_array_size) += 1;
                 break;
-            case file_raw:   /* Convert and dump mode */
+            case file_raw:    /* Read raw data */
                 ptr_bstr->ptr_char_array =
                  (char *)realloc_heap_memory(ptr_bstr->ptr_char_array,
                                              sizeof(char)*2);
@@ -811,7 +811,7 @@ int main(int argc, char *argv[])
         }
         /* call to generate_badchar_sequence() */
         ptr_bstr->ptr_char_array =
-         generate_badchar_sequence(ptr_bstr->ptr_char_array);;
+         generate_badchar_sequence(ptr_bstr->ptr_char_array);
         /* call to output_hex_escaped_string() */
         output_hex_escaped_string(ptr_bstr);
         /* calls to free() for the various allocated memory locations */
