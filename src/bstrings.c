@@ -106,6 +106,13 @@ struct bstring {
     char *ptr_var_name;
 };
 
+/* enumeration of read modes */
+enum enum_read_modes {
+  direct,     /* direct input */
+  file_hex,   /* read hex from file */
+  file_raw    /* read raw data from file */
+};
+
 void output_hex_escaped_string(struct bstring *ptr_bstr)
 {
     /* declare integer i, c and ic */
@@ -413,7 +420,7 @@ void read_and_store_char_input(struct bstring *ptr_bstr)
     }
 }
 
-void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
+void read_from_file(char *filename, struct bstring *ptr_bstr, int read_mode)
 {
     /* declare integer 'c' */
     int c;
@@ -432,7 +439,7 @@ void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
 
     /* before continuing let see in which mode we're in */
     /* mode 1+: we read file and store content on the heap */
-    if (mode >= 1) {
+    if ((read_mode == file_hex) || (read_mode == file_raw)) {
         /* initialize char array index */
         int i = 0;
 
@@ -444,11 +451,11 @@ void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
          */
         char xc[3];
 
-        switch (mode) {
-            case 1:     /* Direct read mode */
+        switch (read_mode) {
+            case direct:     /* Direct read mode */
                 *(ptr_bstr->ptr_array_size) += 1;
                 break;
-            case 2:     /* Convert and dump mode */
+            case file_raw:   /* Convert and dump mode */
                 ptr_bstr->ptr_char_array =
                  (char *)realloc_heap_memory(ptr_bstr->ptr_char_array,
                                              sizeof(char)*2);
@@ -462,9 +469,9 @@ void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
         }
 
         while ((c = getc(ptr_file_descriptor)) != EOF) {
-            switch (mode) {
+            switch (read_mode) {
                 /* mode 1: we simply store the character in buffer. */
-                case 1:
+                case file_hex:
                     /* if newline character (0x0a), then simply ignore it */
                     if (c == 10) break;
                     ptr_bstr->ptr_char_array[i] = (char)c;
@@ -507,7 +514,7 @@ void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
                  * character to hexadecimal. As two hex digits equal one byte,
                  * we must grow our destination character array accordingly.
                  */
-                case 2:
+                case file_raw:
                     snprintf(xc, 3, "%02x", c);
                     ptr_bstr->ptr_char_array[i] = (char)xc[0];
                     ptr_bstr->ptr_char_array[i+1] = (char)xc[1];
@@ -529,8 +536,8 @@ void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
                                                          sizeof(char) *
                                                          (as+=(i/8)*8)*2+2);
                         }
-			/* update the array size */
-			*(ptr_bstr->ptr_array_size) += 2;
+			                  /* update the array size */
+			                  *(ptr_bstr->ptr_array_size) += 2;
                     }
                     i+=2;
                     break;
@@ -553,11 +560,11 @@ void read_from_file(char *filename, struct bstring *ptr_bstr, int mode)
     fclose(ptr_file_descriptor);
 
     /* adjust array size according to the read mode */
-    switch (mode) {
-        case 1:
+    switch (read_mode) {
+        case file_hex:
             (*ptr_bstr->ptr_array_size-=1);
             break;
-        case 2:
+        case file_raw:
             (*ptr_bstr->ptr_array_size-=2);
             break;
     }
@@ -752,11 +759,11 @@ int main(int argc, char *argv[])
         /* if -D|--dump-file option is additionally given */
         if (doHexDumpFile == true) {
             /* call to read_from_file() */
-            read_from_file(fread_filename, ptr_bstr, 2);
+            read_from_file(fread_filename, ptr_bstr, file_raw);
         /* if -f|--file option is given read from file instead of stdin */
         } else if (doReadFromFile == true) {
             /* call to read_from_file() */
-            read_from_file(fread_filename, ptr_bstr, 1);
+            read_from_file(fread_filename, ptr_bstr, file_hex);
         } else {
             /* call to read_and_store_char_input() */
             read_and_store_char_input(ptr_bstr);
@@ -779,7 +786,7 @@ int main(int argc, char *argv[])
     /* if -D|--dump-file option is given */
     if (doHexDumpFile == true) {
         /* call to read_from_file() */
-        read_from_file(fread_filename, NULL, 0);
+        read_from_file(fread_filename, NULL, direct);
         /* exit as we're the last action */
         exit(EXIT_SUCCESS);
     }
